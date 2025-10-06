@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  retail-app:
+    build: . # Builds using the Dockerfile above
+    container_name: retail-spring-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - retail-db
+    environment:
+      # Database connection configuration using the database service name 'retail-db'
+      SPRING_DATASOURCE_URL: jdbc:postgresql://retail-db:5432/retail_db
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+
+  retail-db:
+    image: postgres:14-alpine
+    container_name: retail-postgres-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: retail_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
