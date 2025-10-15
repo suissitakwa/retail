@@ -1,25 +1,32 @@
 package com.retail_project.customer;
 
+import com.retail_project.order.Order;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.OneToMany;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Customer {
     @Id
     @GeneratedValue
-    int id;
-    String firstname;
-    String lastname;
-    String email;
-    String address;
+    private int id;
+    private String firstname;
+    private String lastname;
+    private String email;
+    private String address;
+
+    @OneToMany(mappedBy = "customer")
+    private List<Order> orders = new ArrayList<>();
+
 
 }

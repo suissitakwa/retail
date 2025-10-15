@@ -15,32 +15,33 @@ import java.util.Optional;
 public class CustomerController {
    private final CustomerService customerService;
 
+    @Operation(summary = "Create customers")
     @PostMapping
-    public Customer createCustomer(@RequestBody Customer customer){
-        return customerService.createCustomer(customer);
+    public ResponseEntity<CustomerResponse> createCustomer(@RequestBody CustomerRequest request){
+
+        return ResponseEntity.ok(customerService.createCustomer(request));
     }
     //get all customers
     @Operation(summary = "Get all customers")
     @GetMapping
-    public List<Customer> getCustomers(){
+    public List<CustomerResponse> getCustomers(){
+
         return customerService.getCustomers();
     }
     // get customer by Id
     @Operation(summary = "Get customer by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable int id ){
-       Optional<Customer>  customer= customerService.getCustomerById(id);
-        return customer.map(ResponseEntity::ok)
-                .orElseGet(()->ResponseEntity.notFound().build());
+    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable int id ){
+      return ResponseEntity.ok(customerService.getCustomerById(id));
 
     }
     @Operation(summary = "Update customer by ID")
     @PutMapping("/{id}")
-    ResponseEntity<Customer> updateCustomer(@PathVariable int id,@RequestBody Customer customer){
-        Customer updatedCustomer =customerService.updateCustomer(id, customer);
-        return ResponseEntity.ok(updatedCustomer);
+    ResponseEntity<CustomerResponse> updateCustomer(@PathVariable int id,@RequestBody CustomerRequest request){
+
+        return ResponseEntity.ok(customerService.updateCustomer(id, request));
     }
-    @Operation(summary = "Delate customer by ID")
+    @Operation(summary = "Delete customer by ID")
     @DeleteMapping("/{id}")
     ResponseEntity<?> deleteCustomer(@PathVariable int id){
         customerService.deleteCustomer(id);
