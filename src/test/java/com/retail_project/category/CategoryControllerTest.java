@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.boot.autoconfigure.data.jpa.*;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -22,7 +22,10 @@ import java.util.List;
 
 
 @WebMvcTest(controllers = CategoryController.class,
-        excludeAutoConfiguration = {SecurityAutoConfiguration.class} )
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class
+                ,org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration.class
+                //,org.springframework.boot.autoconfigure.data.jpa.JpaAuditingAutoConfiguration.class
+} )
 public class CategoryControllerTest {
     @Autowired
     private MockMvc mockMvc;

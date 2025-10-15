@@ -1,6 +1,7 @@
 package com.retail_project.category;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ public class CategoryController {
     //todo post create category
     @Operation(summary = "Create Category")
     @PostMapping
-    public ResponseEntity<CategoryResponse >createCategory(@RequestBody CategoryRequest request){
+    public ResponseEntity<CategoryResponse >createCategory(@RequestBody @Valid CategoryRequest request){
         return ResponseEntity.ok(categoryService.createCategory(request));
     }
 

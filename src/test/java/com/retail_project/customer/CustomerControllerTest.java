@@ -27,7 +27,10 @@ import java.util.List;
 import java.util.Optional;
 
 @WebMvcTest(controllers = CustomerController.class,
-        excludeAutoConfiguration = {SecurityAutoConfiguration.class} )
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration.class
+              //  JpaAuditingAutoConfiguration.class
+} )
 public class CustomerControllerTest {
     @Autowired
     private MockMvc mockMvc;

@@ -35,6 +35,15 @@ public class GlobalExceptionHandler {
                 .status(BAD_REQUEST)
                 .body(new ErrorResponse(errors));
     }
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        // Check if the message indicates a "Not Found" error
+        if (ex.getMessage() != null && ex.getMessage().contains("not found")) {
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+        }
 
+        // For any other RuntimeException, return Internal Server Error
+        return new ResponseEntity<>("An unexpected error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
 }

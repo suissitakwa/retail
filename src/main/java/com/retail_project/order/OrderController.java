@@ -26,20 +26,22 @@ public class OrderController {
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
-/*
+
     @Operation(summary = "Get all orders")
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
- */
+ /*
     @Operation(summary = "Get paginated list of orders")
     @GetMapping
    public ResponseEntity<Page<OrderResponse>> getOrders(
         @ParameterObject Pageable pageable) {
     return ResponseEntity.ok(orderService.getAllOrders(pageable));
 }
+
+ */
 
     @Operation(summary = "Get order by ID")
     @GetMapping("/{id}")
