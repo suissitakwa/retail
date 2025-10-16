@@ -26,6 +26,14 @@ public class OrderController {
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
+    @Operation(summary = "Checkout customer's cart")
+    @PostMapping("/checkout/{customerId}")
+    public ResponseEntity<OrderResponse> checkoutCart(
+            @PathVariable Integer customerId,
+            @Valid @RequestBody CheckoutRequest request
+    ) {
+        return ResponseEntity.ok(orderService.checkoutCart(customerId, request));
+    }
 
     @Operation(summary = "Get all orders")
     @GetMapping
@@ -63,4 +71,5 @@ public class OrderController {
         orderService.deleteOrder(id);
         return ResponseEntity.noContent().build();
     }
+
 }
