@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -13,6 +15,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 @Entity
+@Table(name = "cart_items")
 public class CartItem {
     @Id
     @GeneratedValue
@@ -27,4 +30,6 @@ public class CartItem {
     private Product product;
 
     private Integer quantity;
+    private BigDecimal price;
+
 }
