@@ -22,7 +22,8 @@ public class Payment {
     @GeneratedValue
     private Integer id;
 
-    @OneToMany(mappedBy = "order")
+    @ManyToOne
+    @JoinColumn(name = "order_id")
     private Order order;
 
     private String status ;

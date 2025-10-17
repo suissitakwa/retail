@@ -24,6 +24,7 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "retail_order")
 public class Order {
     @Id
     @GeneratedValue
