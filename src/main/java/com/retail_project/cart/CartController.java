@@ -18,6 +18,13 @@ public class CartController {
     public ResponseEntity<CartResponse> getCart(@PathVariable Integer customerId) {
         return ResponseEntity.ok(cartService.getOrCreateCart(customerId));
     }
+    @PostMapping("/add")
+    public ResponseEntity<CartResponse> addItemWithoutCustomer(
+            @RequestBody @Valid CartItemRequest request
+    ) {
+        Integer customerId = 1; // or extract from JWT/session later
+        return ResponseEntity.ok(cartService.addItemToCart(customerId, request));
+    }
 
     @PostMapping("/{customerId}/add")
     public ResponseEntity<CartResponse> addItem(

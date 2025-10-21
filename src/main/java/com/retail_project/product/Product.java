@@ -29,7 +29,10 @@ public class Product {
     private String imageUrl;
     private BigDecimal price;
 
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "product",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY, // Default is LAZY, but adding for clarity
+            orphanRemoval = true)
     private Inventory inventory;
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL)

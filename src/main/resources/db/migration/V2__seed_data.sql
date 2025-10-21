@@ -11,3 +11,7 @@ INSERT INTO product (id, name, description, image_url, price, category_id) VALUE
   (nextval('product_seq'), 'Red Dress', 'Elegant red dress.', '/images/red-dress.jpg', 79.99, (SELECT id FROM category WHERE name = 'Women')),
   (nextval('product_seq'), 'Blue Shirt', 'Stylish blue shirt.', '/images/blue-shirt.jpg', 49.99, (SELECT id FROM category WHERE name = 'Men')),
   (nextval('product_seq'), 'Leather Belt', 'Genuine leather belt.', '/images/leather-belt.jpg', 29.99, (SELECT id FROM category WHERE name = 'Accessories'));
+
+  INSERT INTO inventory (product_id, quantity, last_updated)
+  SELECT id, 100, NOW() FROM product
+  WHERE name IN ('Red Dress', 'Blue Shirt', 'Leather Belt');

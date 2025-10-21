@@ -19,8 +19,8 @@ public class Inventory {
     @GeneratedValue
     private Integer id;
 
-    @OneToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false, unique = true)
     private Product product;
 
     @Min(value = 0, message = "Stock quantity cannot be negative")
