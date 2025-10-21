@@ -8,6 +8,7 @@ public record ProductResponse(
         String description,
         BigDecimal price,
         Integer categoryId,
-        double availableQuantity
+        double availableQuantity,
+        String imageUrl
 ) {
 }

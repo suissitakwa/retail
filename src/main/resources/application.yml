@@ -17,7 +17,7 @@ spring:
   jpa:
     hibernate:
       # Automatically update the database schema based on entities
-      ddl-auto: update
+      ddl-auto: none
 
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -54,3 +54,9 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true

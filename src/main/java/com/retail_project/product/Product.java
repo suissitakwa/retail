@@ -25,7 +25,8 @@ public class Product {
     private Integer id;
     private String name;
     private String description;
-
+    @Column(name = "image_url")
+    private String imageUrl;
     private BigDecimal price;
 
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL)

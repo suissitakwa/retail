@@ -33,7 +33,7 @@ public class ProductControllerTest {
 
     @Test
     void testGetProducts() throws Exception {
-        ProductResponse product = new ProductResponse(1, "Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,1);
+        ProductResponse product = new ProductResponse(1, "Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,1,"");
         when(productService.getProducts()).thenReturn(List.of(product));
 
         mockMvc.perform(get("/api/v1/products"))
@@ -43,7 +43,7 @@ public class ProductControllerTest {
 
     @Test
     void testGetProductById_Found() throws Exception {
-        ProductResponse response = new ProductResponse(1, "Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,1);
+        ProductResponse response = new ProductResponse(1, "Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,1,"");
         when(productService.getProductById(1)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/products/1"))
@@ -61,8 +61,8 @@ public class ProductControllerTest {
 
     @Test
     void testCreateProduct() throws Exception {
-        ProductRequest request = new ProductRequest("Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1);
-        ProductResponse response = new ProductResponse(1, "Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,1);
+        ProductRequest request = new ProductRequest("Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,"");
+        ProductResponse response = new ProductResponse(1, "Laptop", "Gaming laptop", new BigDecimal("1299.99"), 1,1,"");
 
         when(productService.createProduct(any())).thenReturn(response);
 
@@ -75,7 +75,7 @@ public class ProductControllerTest {
 
     @Test
     void testCreateProduct_InvalidRequest() throws Exception {
-        ProductRequest invalidRequest = new ProductRequest("", "", null, null);
+        ProductRequest invalidRequest = new ProductRequest("", "", null, null,"");
 
         mockMvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,8 +85,8 @@ public class ProductControllerTest {
 
     @Test
     void testUpdateProduct() throws Exception {
-        ProductRequest request = new ProductRequest("Updated Laptop", "Updated description", new BigDecimal("1500.00"), 1);
-        ProductResponse response = new ProductResponse(1, "Updated Laptop", "Updated description", new BigDecimal("1500.00"), 1,0);
+        ProductRequest request = new ProductRequest("Updated Laptop", "Updated description", new BigDecimal("1500.00"), 1,"");
+        ProductResponse response = new ProductResponse(1, "Updated Laptop", "Updated description", new BigDecimal("1500.00"), 1,0,"");
 
         when(productService.updateProduct(eq(1), any())).thenReturn(response);
 
@@ -99,7 +99,7 @@ public class ProductControllerTest {
 
     @Test
     void testUpdateProduct_NotFound() throws Exception {
-        ProductRequest request = new ProductRequest("Updated Laptop", "Updated description", new BigDecimal("1500.00"), 1);
+        ProductRequest request = new ProductRequest("Updated Laptop", "Updated description", new BigDecimal("1500.00"), 1,"");
         when(productService.updateProduct(eq(999), any())).thenThrow(new ProductNotFoundException(999));
 
         mockMvc.perform(put("/api/v1/products/999")

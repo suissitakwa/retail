@@ -42,6 +42,7 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setCategory(category);
+        product.setImageUrl(request.imageUrl());
         return mapper.toResponse(productRepository.save(product));
     }
     //todo delete product

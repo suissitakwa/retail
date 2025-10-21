@@ -15,6 +15,7 @@ public record ProductRequest(
         @DecimalMin(value = "0.0", inclusive = false, message = "Price must be positive")
          BigDecimal price,
         @NotNull(message = "Category ID is required")
-        Integer categoryId
+        Integer categoryId,
+        String imageUrl
 ) {
 }

@@ -9,7 +9,8 @@ public class ProductMapper {
         return Product.builder().name(request.name())
                 .description(request.description())
                 .price(request.price())
-                .category(category).build();
+                .category(category)
+                .imageUrl(request.imageUrl()).build();
 
     }
 
@@ -20,7 +21,7 @@ public class ProductMapper {
                 product.getDescription(),
                 product.getPrice(),
                 product.getCategory() != null ? product.getCategory().getId() : null,
-                product.getInventory().getQuantity()
+                product.getInventory().getQuantity(),product.getImageUrl()
         );
     }
 
