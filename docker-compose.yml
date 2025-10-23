@@ -7,8 +7,8 @@ services:
       - "8080:8080"
     depends_on:
       - retail-db
+      - kafka
     environment:
-      # Database connection configuration using the database service name 'retail-db'
       SPRING_DATASOURCE_URL: jdbc:postgresql://retail-db:5432/retail_db
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
@@ -39,6 +39,32 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: prometheus
+    ports:
+      - "9090:9090" # Prometheus web UI
+    volumes:
+      # Mount the configuration file we just created
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - retail-app
+
+  grafana:
+      image: grafana/grafana:10.0.0
+      container_name: grafana
+      ports:
+        - "3000:3000" # Grafana web UI
+      environment:
+        # Skip initial login requirements for ease of use
+        - GF_SECURITY_ALLOW_EMBEDDING=true
+      depends_on:
+        - prometheus
 
 volumes:
   postgres_data:
