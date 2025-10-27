@@ -1,5 +1,6 @@
 package com.retail_project.customer;
 
+import com.retail_project.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomerController {
    private final CustomerService customerService;
-
+    private final AuthService authService;
     @Operation(summary = "Create customers")
     @PostMapping
     public ResponseEntity<CustomerResponse> createCustomer(@RequestBody CustomerRequest request){
@@ -47,5 +48,12 @@ public class CustomerController {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/me")
+    public ResponseEntity<Customer> getProfile(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        Customer customer = authService.getCurrentCustomer(token);
+        return ResponseEntity.ok(customer);
+    }
+
 
 }

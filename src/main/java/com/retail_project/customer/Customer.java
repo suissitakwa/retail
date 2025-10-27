@@ -1,10 +1,7 @@
 package com.retail_project.customer;
 
 import com.retail_project.order.Order;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -22,7 +19,10 @@ public class Customer {
     private int id;
     private String firstname;
     private String lastname;
+    @Enumerated(EnumType.STRING)
+    private Role role;
     private String email;
+    private String password;
     private String address;
 
     @OneToMany(mappedBy = "customer")

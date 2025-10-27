@@ -28,7 +28,11 @@ spring:
     max-lifetime: 580000
     idle-timeout: 600000 # Default is 10 minutes (600000ms)
     connection-timeout: 30000 # 30 seconds
-
+application:
+  security:
+    jwt:
+      secret-key: CcJSObeQbNRHUCZhZmXMn+Olke8mRnBPwbOhqKlqLQ0=
+      expiration: 8640000
   kafka:
     # FIX: Using 'localhost:9092' because the Spring application is running directly on the host machine
     # (via mvnw), and not inside a Docker container, so it must connect through the host's network interface
