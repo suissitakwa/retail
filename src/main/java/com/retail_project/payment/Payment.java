@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-@EntityListeners(AuditingEntityListener.class)
+//@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -27,8 +27,8 @@ public class Payment {
     private Order order;
 
     private String status ;
-    private PaymentMethod paymentMethod ;
-
+   // private PaymentMethod paymentMethod ;
+/*
     @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdDate;
@@ -36,5 +36,5 @@ public class Payment {
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
-
+*/
 }

@@ -62,8 +62,10 @@ application:
 
   flyway:
     enabled: true
+    clean-disabled: false
     locations: classpath:db/migration
     baseline-on-migrate: true
+    repair-on-migrate: true
 
 # --- ACTUATOR CONFIGURATION ---
 management:

@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -41,7 +42,7 @@ public class CartService {
         return cartMapper.toResponse(cart);
     }
 
-
+/*
     @Transactional
     public CartResponse addItemToCart(Integer customerId, CartItemRequest request) {
         Cart cart = cartRepository.findByCustomerId(customerId)
@@ -65,6 +66,48 @@ public class CartService {
 
         return cartMapper.toResponse(cartRepository.save(cart));
     }
+*/
+@Transactional
+public CartResponse addItemToCart(Integer customerId, CartItemRequest request) {
+    // 1. Find the cart, OR create a new one if it doesn't exist.
+    Cart cart = cartRepository.findByCustomerId(customerId)
+            .orElseGet(() -> {
+                // Assuming Cart has a constructor like: new Cart(Integer customerId)
+                // This initializes the cart with the customer ID and an empty list of items.
+                System.out.println("No cart found for customer " + customerId + ". Creating new cart.");
+                //return new Cart(customerId);
+                Customer customer = customerRepository.findById(customerId)
+                        .orElseThrow(() -> new RuntimeException("Customer not found in the database. Cannot create a cart."));
+
+                Cart newCart = new Cart();
+                // Link the Cart to the loaded Customer entity
+                newCart.setCustomer(customer);
+                return newCart;
+            });
+
+    // 2. Load the product to ensure it exists
+    Product product = productRepository.findById(request.productId())
+            .orElseThrow(() -> new RuntimeException("Product not found"));
+
+    // 3. Check if the item is already in the cart
+    Optional<CartItem> existingItem = cart.getItems()
+            .stream()
+            .filter(item -> item.getProduct().getId().equals(request.productId()))
+            .findFirst();
+
+    // 4. Update quantity or add new item
+    if (existingItem.isPresent()) {
+        CartItem item = existingItem.get();
+        item.setQuantity(item.getQuantity() + request.quantity());
+    } else {
+        // Assume you need to pass the cart entity for the relationship mapping
+        CartItem newItem = cartItemMapper.toEntity(request, product, cart);
+        cart.getItems().add(newItem);
+    }
+
+    // 5. Save the updated or newly created cart
+    return cartMapper.toResponse(cartRepository.save(cart));
+}
 
     // Remove item from cart
     @Transactional

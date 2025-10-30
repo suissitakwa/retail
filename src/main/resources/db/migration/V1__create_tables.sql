@@ -13,12 +13,14 @@ CREATE SEQUENCE IF NOT EXISTS payment_seq INCREMENT BY 50;
 CREATE SEQUENCE IF NOT EXISTS notification_seq INCREMENT BY 50;
 
 -- Create tables
-CREATE TABLE IF NOT EXISTS customer (
-    id          INTEGER NOT NULL PRIMARY KEY DEFAULT nextval('customer_seq'),
-    firstname   VARCHAR(255),
-    lastname    VARCHAR(255),
-    email       VARCHAR(255) UNIQUE,
-    address     VARCHAR(255)
+CREATE TABLE IF NOT EXISTS  customer (
+    id SERIAL PRIMARY KEY,
+    firstname VARCHAR(255),
+    lastname VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'ROLE_CUSTOMER',
+    address VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS category (
