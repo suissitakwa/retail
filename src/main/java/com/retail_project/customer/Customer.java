@@ -1,5 +1,6 @@
 package com.retail_project.customer;
 
+import com.retail_project.cart.Cart;
 import com.retail_project.order.Order;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,5 +29,7 @@ public class Customer {
     @OneToMany(mappedBy = "customer")
     private List<Order> orders = new ArrayList<>();
 
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
 
 }

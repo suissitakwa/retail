@@ -39,6 +39,7 @@ public class AuthController {
                 .build();
 
         customerRepository.save(customer);
+        String token = jwtService.generateToken(request.email());
         return ResponseEntity.ok("User registered successfully");
     }
 

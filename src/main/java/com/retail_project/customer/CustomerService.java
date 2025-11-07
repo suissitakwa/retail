@@ -7,7 +7,9 @@ import org.apache.kafka.common.message.LeaderAndIsrRequestData;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,5 +76,10 @@ public class CustomerService {
     public Page<Customer> getAllCustomer(int page,int size) {
         Pageable pageable= PageRequest.of(page, size);
         return customerRepository.findAll(pageable);
+    }
+    public CustomerResponse getCustomerByEmail(String email) {
+        Customer customer = customerRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        return mapper.toResponse(customer);
     }
 }
