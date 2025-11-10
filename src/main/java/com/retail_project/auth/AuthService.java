@@ -2,10 +2,12 @@ package com.retail_project.auth;
 
 import com.retail_project.config.jwt.JwtService;
 
+import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,8 +27,8 @@ public class AuthService {
         if (!passwordEncoder.matches(password, customer.getPassword())) {
             throw new BadCredentialsException("Invalid credentials");
         }
-
-        return jwtUtil.generateToken(customer.getEmail());
+        UserDetails userDetails=new MyUserDetails(customer);
+        return jwtUtil.generateToken(userDetails);
     }
 
     public Customer getCurrentCustomer(String token) {

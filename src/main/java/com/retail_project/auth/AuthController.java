@@ -1,6 +1,7 @@
 package com.retail_project.auth;
 
 import com.retail_project.config.jwt.JwtService;
+
 import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +27,9 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Valid RegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest request) {
         if (customerRepository.existsByEmail(request.email())) {
-            return ResponseEntity.badRequest().body("Email already in use");
+            return ResponseEntity.badRequest().build();
         }
 
         Customer customer = Customer.builder()
@@ -39,8 +41,11 @@ public class AuthController {
                 .build();
 
         customerRepository.save(customer);
-        String token = jwtService.generateToken(request.email());
-        return ResponseEntity.ok("User registered successfully");
+        UserDetails userDetails = new MyUserDetails(customer);
+        String token = jwtService.generateToken(userDetails);
+        return ResponseEntity.ok(new AuthResponse(token));
+
+
     }
 
     @PostMapping("/login")
@@ -53,8 +58,9 @@ public class AuthController {
         );
 
 
-        String email = auth.getName();
-        String token = jwtService.generateToken(email);
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        String token = jwtService.generateToken(userDetails);
+
 
         return ResponseEntity.ok(new AuthResponse(token));
 
