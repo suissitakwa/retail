@@ -3,6 +3,7 @@ package com.retail_project.cart;
 
 import com.retail_project.cartItem.CartItemRequest;
 import com.retail_project.cartItem.CartItemResponse;
+import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
 import com.retail_project.exceptions.CustomerNotFoundException;
@@ -27,15 +28,19 @@ public class CartController {
     private Customer getAuthenticatedCustomer(Authentication authentication) {
         Object principal = authentication.getPrincipal();
 
-        if (!(principal instanceof Customer)) {
+        if (principal instanceof MyUserDetails myUserDetails ) {
+            Customer customer = myUserDetails.getCustomer();
+            if (customer != null) {
+                return customer;
+            }
+        }
             logger.error("Authentication principal is misconfigured. Expected Customer, found: {}", principal.getClass().getName());
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Authentication principal is misconfigured."
             );
-        }
 
-        return (Customer) principal;
+
     }
 
     @GetMapping
@@ -59,11 +64,14 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/remove/{productId}") // /api/v1/cart/remove/{productId}
+    @DeleteMapping("/remove/{productId}")
     public ResponseEntity<CartResponse> removeItem(
             @PathVariable Integer productId,
             Authentication authentication
     ) {
+        if (productId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product ID cannot be null");
+        }
         Customer customer = getAuthenticatedCustomer(authentication);
         logger.info("Removing product {} from cart for customer ID: {}", productId, customer.getId());
         return ResponseEntity.ok(cartService.removeItem(customer.getId(), productId));

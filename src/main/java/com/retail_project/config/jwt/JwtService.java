@@ -1,11 +1,9 @@
 package com.retail_project.config.jwt;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -22,35 +20,36 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
+    // Generate token from UserDetails
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-
-        // Store user authorities (roles)
         claims.put("role", userDetails.getAuthorities());
-
-        return generateToken(claims, userDetails.getUsername());
+        return buildToken(claims, userDetails);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, String email) {
+    // Build token (shared method)
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(extraClaims)
-                .setSubject(email)                                // username=email
-                .setIssuedAt(new Date())
+                .setSubject(userDetails.getUsername()) // subject=email
+                .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-
+    // Extract email (subject)
     public String extractEmail(String token) {
         return getClaims(token).getSubject();
     }
 
-    public boolean isTokenValid(String token, String userEmail) {
-        final String extractedEmail = extractEmail(token);
-        return (extractedEmail.equals(userEmail) && !isTokenExpired(token));
+    // Validate token against user details
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String email = extractEmail(token);
+        return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
+    // Helper methods
     private boolean isTokenExpired(String token) {
         return getClaims(token).getExpiration().before(new Date());
     }

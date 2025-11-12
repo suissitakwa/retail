@@ -2,10 +2,6 @@ package com.retail_project.config.jwt;
 
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -13,6 +9,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -28,10 +29,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-
         String email = null;
         String token = null;
 
@@ -40,20 +41,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             email = jwtUtil.extractEmail(token);
         }
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            var customer = customerRepository.findByEmail(email);
+        System.out.println(" Incoming request: " + request.getRequestURI());
+        System.out.println(" Token: " + token);
+        System.out.println(" Extracted email: " + email);
 
-            if (customer.isPresent() && jwtUtil.isTokenValid(token, email)) {
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        customer.get(),
-                        null,
-                        null // You can add roles if you manage authorities
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            var customerOpt = customerRepository.findByEmail(email);
+
+            if (customerOpt.isPresent()) {
+                var customer = customerOpt.get();
+                var userDetails = new MyUserDetails(customer);
+                boolean valid = jwtUtil.isTokenValid(token, userDetails);
+
+                System.out.println(" Token valid? " + valid);
+
+                if (valid) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    System.out.println("Token validation failed for " + email);
+                }
+            } else {
+                System.out.println(" No customer found for email: " + email);
             }
         }
 
         filterChain.doFilter(request, response);
     }
+
 }
