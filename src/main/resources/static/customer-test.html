@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer API Tester</title>
+</head>
+<body>
+<h1>Customer API Tester</h1>
+
+<h2>Create Customer</h2>
+<form id="createCustomerForm">
+    <input type="text" id="firstname" placeholder="First Name" required>
+    <input type="text" id="lastname" placeholder="Last Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="address" placeholder="Address" required>
+    <button type="submit">Create</button>
+</form>
+
+<h2>Customer List</h2>
+<button onclick="loadCustomers()">Load Customers</button>
+<ul id="customerList"></ul>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/v1/customers';
+
+    document.getElementById('createCustomerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const customer = {
+        firstname: document.getElementById('firstname').value,
+        lastname: document.getElementById('lastname').value,
+        email: document.getElementById('email').value,
+        address: document.getElementById('address').value
+      };
+
+      fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customer)
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert('Customer created!');
+        loadCustomers();
+      })
+      .catch(error => console.error('Error:', error));
+    });
+
+    function loadCustomers() {
+      fetch(API_BASE)
+        .then(response => response.json())
+        .then(data => {
+          const list = document.getElementById('customerList');
+          list.innerHTML = '';
+          data.forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = `${c.firstname} ${c.lastname} - ${c.email}`;
+            list.appendChild(li);
+          });
+        });
+    }
+</script>
+</body>
+</html>

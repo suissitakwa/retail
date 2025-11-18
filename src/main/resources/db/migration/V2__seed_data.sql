@@ -1,0 +1,1 @@
+-- V2: Seed Data Insertion — populate initial categories & products
