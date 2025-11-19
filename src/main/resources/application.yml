@@ -5,7 +5,7 @@ server:
 stripe:
   secret-key:  ${STRIPE_SECRET_KEY}
   webhook:
-    secret: whsec_42e811b5d002e7cc9217e0e80c267c3ff20cc093f09d9809e851a627c6effa7a
+    secret: ${STRIPE_WEBHOOK_SECRET}
   api-version: "2024-06-20"
 spring:
   application:

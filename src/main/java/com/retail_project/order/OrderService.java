@@ -36,8 +36,13 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final PaymentService paymentService;
     private final ProductRepository productRepository;
+
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
+
+    // ----------------------------------------------------------------
+    // Create order directly from a request (not used in checkout flow)
+    // ----------------------------------------------------------------
     @Transactional
     public Order createOrder(OrderRequest request) {
 
@@ -49,6 +54,7 @@ public class OrderService {
         order.setReference(request.reference());
         order.setCreatedDate(LocalDateTime.now());
         order.setPaymentMethod(PaymentMethod.valueOf(request.paymentMethod()));
+        order.setStatus(OrderStatus.PENDING);
 
         List<OrderItem> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
@@ -74,7 +80,7 @@ public class OrderService {
     }
 
     // ----------------------------------------------------------
-    // Create Order from Cart
+    // Create Order from Cart (used by checkout)
     // ----------------------------------------------------------
     @Transactional
     public Order createOrderFromCart(Integer customerId) {
@@ -93,6 +99,7 @@ public class OrderService {
         order.setCustomer(customer);
         order.setCreatedDate(LocalDateTime.now());
         order.setReference("ORD-" + System.currentTimeMillis());
+        order.setStatus(OrderStatus.PENDING);
 
         BigDecimal total = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -120,13 +127,16 @@ public class OrderService {
 
         return saved;
     }
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
+
     public Order getOrderById(Integer id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
     }
+
     @Transactional
     public Order updateOrder(Integer id, OrderRequest request) {
 
@@ -138,6 +148,7 @@ public class OrderService {
 
         return orderRepository.save(existing);
     }
+
     @Transactional
     public void deleteOrder(Integer id) {
 
@@ -148,14 +159,13 @@ public class OrderService {
         orderRepository.deleteById(id);
     }
 
-
     // ----------------------------------------------------------
     // Checkout + Stripe Session + Pending Payment
     // ----------------------------------------------------------
     @Transactional
     public PaymentResponse checkoutAndInitiatePayment(Integer customerId) throws Exception {
 
-        // 1. Create the order
+        // 1. Create the order from the customer's cart
         Order order = createOrderFromCart(customerId);
 
         // 2. Create Stripe Session
@@ -165,15 +175,23 @@ public class OrderService {
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl("http://localhost:3001/success?orderId=" + order.getId())
                 .setCancelUrl("http://localhost:3001/cancel")
+                // Attach orderId to PaymentIntent metadata (optional, now)
+                .setPaymentIntentData(
+                        SessionCreateParams.PaymentIntentData.builder()
+                                .putMetadata("orderId", order.getId().toString())
+                                .build()
+                )
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)
                                 .setPriceData(
                                         SessionCreateParams.LineItem.PriceData.builder()
                                                 .setCurrency("usd")
-                                                .setUnitAmount(order.getTotalAmount()
-                                                        .multiply(BigDecimal.valueOf(100))
-                                                        .longValue())
+                                                .setUnitAmount(
+                                                        order.getTotalAmount()
+                                                                .multiply(BigDecimal.valueOf(100))
+                                                                .longValue()
+                                                )
                                                 .setProductData(
                                                         SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                                                 .setName("Order #" + order.getId())
@@ -187,7 +205,7 @@ public class OrderService {
 
         Session session = Session.create(params);
 
-// Save PENDING payment
+        // 3. Save PENDING payment linked to this session
         return paymentService.createPendingPayment(order, session);
     }
-    }
+}

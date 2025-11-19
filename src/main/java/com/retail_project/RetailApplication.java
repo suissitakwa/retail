@@ -14,10 +14,15 @@ public class RetailApplication {
 				.ignoreIfMissing()
 				.load();
 
-		// Set as system properties so Spring Boot can read them
-		System.setProperty("DB_USERNAME", dotenv.get("DB_USERNAME"));
-		System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
+		setIfPresent("STRIPE_SECRET_KEY", dotenv.get("STRIPE_SECRET_KEY"));
+		setIfPresent("DB_USERNAME", dotenv.get("DB_USERNAME"));
+		setIfPresent("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
+		setIfPresent("STRIPE_WEBHOOK_SECRET", dotenv.get("STRIPE_WEBHOOK_SECRET"));
 		SpringApplication.run(RetailApplication.class, args);
 	}
-
+	private static void setIfPresent(String key, String value) {
+		if (value != null) {
+			System.setProperty(key, value);
+		}
+	}
 }
