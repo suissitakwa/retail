@@ -9,5 +9,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     Optional<Payment> findByStripeSessionId(String stripeSessionId);
 
     Optional<Payment> findByStripePaymentIntentId(String paymentIntentId);
+
+
 }
 

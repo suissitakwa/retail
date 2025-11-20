@@ -9,6 +9,7 @@ import com.retail_project.exceptions.CustomerNotFoundException;
 import com.retail_project.exceptions.OrderNotFoundException;
 import com.retail_project.orderItem.OrderItem;
 import com.retail_project.orderItem.OrderItemRequest;
+import com.retail_project.orderItem.OrderItemResponse;
 import com.retail_project.payment.PaymentResponse;
 import com.retail_project.payment.PaymentService;
 import com.retail_project.product.Product;
@@ -19,6 +20,8 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -100,6 +103,7 @@ public class OrderService {
         order.setCreatedDate(LocalDateTime.now());
         order.setReference("ORD-" + System.currentTimeMillis());
         order.setStatus(OrderStatus.PENDING);
+        order.setPaymentMethod(PaymentMethod.STRIPE);
 
         BigDecimal total = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -208,4 +212,58 @@ public class OrderService {
         // 3. Save PENDING payment linked to this session
         return paymentService.createPendingPayment(order, session);
     }
+    public Page<OrderResponse> getOrdersForCustomer(Integer customerId, Pageable pageable) {
+
+        Page<Order> page = orderRepository.findByCustomerId(customerId, pageable);
+
+        return page.map(order -> new OrderResponse(
+                order.getId(),
+                order.getReference(),
+                order.getTotalAmount(),
+                order.getPaymentMethod().name(),
+                order.getCustomer().getId(),
+                order.getOrderItems().stream()
+                        .map(oi -> new OrderItemResponse(
+                                oi.getId(),
+                                oi.getProduct().getId(),
+                                oi.getProduct().getName(),
+                                oi.getQuantity(),
+                                oi.getPrice()
+                        )).toList(),
+                order.getCreatedDate()
+        ));
+    }
+    public OrderResponse getOrderDetails(Integer orderId, int customerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if (order.getCustomer().getId()!=customerId) {
+            throw new RuntimeException("Unauthorized: Not your order");
+        }
+
+        return new OrderResponse(
+                order.getId(),
+                order.getReference(),
+                order.getTotalAmount(),
+                order.getPaymentMethod().name(),
+                order.getCustomer().getId(),
+                order.getOrderItems().stream().map(oi ->
+                        new OrderItemResponse(
+                                oi.getId(),
+                                oi.getProduct().getId(),
+                                oi.getProduct().getName(),
+                                oi.getQuantity(),
+                                oi.getPrice()
+                        )
+                ).toList(),
+                order.getCreatedDate()
+        );
+    }
+    public Integer getCustomerIdByEmail(String email) {
+        return customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer not found"))
+                .getId();
+    }
+
+
 }

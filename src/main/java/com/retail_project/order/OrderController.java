@@ -1,9 +1,14 @@
 package com.retail_project.order;
 
+import com.retail_project.customer.Customer;
 import com.retail_project.payment.CheckoutResponse;
 import com.retail_project.payment.PaymentResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +43,37 @@ public class OrderController {
                 )
         );
     }
+    @GetMapping("/my-orders")
+    public ResponseEntity<Page<OrderResponse>> getMyOrders(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        String email = authentication.getName();
+        System.out.println("inside getMyOrders checkoutAndInitiatePayment this is my email: "+email);
+        Integer customerId = orderService.getCustomerIdByEmail(email);
+
+        Page<OrderResponse> orders = orderService.getOrdersForCustomer(
+                customerId,
+                PageRequest.of(page, size, Sort.by("createdDate").descending())
+        );
+
+        return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> getOrderDetails(
+            @PathVariable Integer id,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        Integer customerId = orderService.getCustomerIdByEmail(email);
+
+
+        OrderResponse order = orderService.getOrderDetails(id, customerId);
+
+        return ResponseEntity.ok(order);
+    }
 
 
     // --------------------------------------------
@@ -48,13 +84,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
-    // --------------------------------------------
-    // Get single order
-    // --------------------------------------------
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Integer id) {
-        return ResponseEntity.ok(orderService.getOrderById(id));
-    }
+
 
     // --------------------------------------------
     // Update order
