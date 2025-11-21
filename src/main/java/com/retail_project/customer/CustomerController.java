@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -66,6 +67,16 @@ public class CustomerController {
         CustomerResponse profile = customerService.getCustomerByEmail(email);
         return ResponseEntity.ok(profile);
     }
+    @PutMapping("/me")
+    public ResponseEntity<CustomerResponse> updateProfile(@RequestBody Customer updated) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
 
+        CustomerResponse customerResponse = customerService.updateProfile(email, updated);
+
+        return ResponseEntity.ok(customerResponse);
     }
+
+
+}
 

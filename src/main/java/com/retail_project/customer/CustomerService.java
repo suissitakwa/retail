@@ -49,6 +49,17 @@ public class CustomerService {
         customerRepository.save(customer);
         return mapper.toResponse(customer);
     }
+    public CustomerResponse updateProfile(String email,Customer updated){
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow();
+
+        customer.setFirstname(updated.getFirstname());
+        customer.setLastname(updated.getLastname());
+        customer.setAddress(updated.getAddress());
+
+        customerRepository.save(customer);
+        return mapper.toResponse(customer);
+    }
 
     private void mergeCustomer(Customer customer, CustomerRequest request) {
         if (StringUtils.isNotBlank(request.firstname())) {

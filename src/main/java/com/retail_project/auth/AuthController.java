@@ -37,7 +37,8 @@ public class AuthController {
                 .password(passwordEncoder.encode(request.password()))
                 .firstname(request.firstname())
                 .lastname(request.lastname())
-                .role(request.role()) // ROLE_CUSTOMER or ROLE_ADMIN
+                .role(request.role())
+                .address(request.address())
                 .build();
 
         customerRepository.save(customer);
