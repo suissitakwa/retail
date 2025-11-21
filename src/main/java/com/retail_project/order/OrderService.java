@@ -132,8 +132,8 @@ public class OrderService {
         return saved;
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream().map(orderMapper::toResponse).toList();
     }
 
     public Order getOrderById(Integer id) {

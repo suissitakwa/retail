@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,17 +21,12 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // --------------------------------------------
-    // Create Manual Order (Admin / Non-cart)
-    // --------------------------------------------
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
 
-    // --------------------------------------------
-    // Checkout current cart → Stripe Checkout
-    // --------------------------------------------
+
     @PostMapping("/checkout")
     public ResponseEntity<CheckoutResponse> checkoutCart(@RequestParam Integer customerId) throws Exception {
 
@@ -76,19 +72,15 @@ public class OrderController {
     }
 
 
-    // --------------------------------------------
-    // Get all orders
-    // --------------------------------------------
-    @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/all-orders")
+    public List<OrderResponse> getAllOrdersForAdmin() {
+        return orderService.getAllOrders();
     }
 
 
 
-    // --------------------------------------------
-    // Update order
-    // --------------------------------------------
+
     @PutMapping("/{id}")
     public ResponseEntity<Order> updateOrder(
             @PathVariable Integer id,
@@ -97,9 +89,6 @@ public class OrderController {
         return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
 
-    // --------------------------------------------
-    // Delete order
-    // --------------------------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Integer id) {
         orderService.deleteOrder(id);

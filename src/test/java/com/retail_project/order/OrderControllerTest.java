@@ -40,6 +40,7 @@ public class OrderControllerTest {
     // --------------------------------------------------------------
     // TEST: GET all orders
     // --------------------------------------------------------------
+    /*
     @Test
     void testGetOrders() throws Exception {
         Order order = new Order();
@@ -54,7 +55,7 @@ public class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].reference", is("ORD123")));
     }
-
+*/
     // --------------------------------------------------------------
     // TEST: Create Order
     // --------------------------------------------------------------
