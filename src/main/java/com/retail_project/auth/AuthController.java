@@ -5,6 +5,7 @@ import com.retail_project.config.jwt.JwtService;
 import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
+import com.retail_project.customer.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class AuthController {
                 .password(passwordEncoder.encode(request.password()))
                 .firstname(request.firstname())
                 .lastname(request.lastname())
-                .role(request.role())
+                .role(Role.ROLE_CUSTOMER)
                 .address(request.address())
                 .build();
 

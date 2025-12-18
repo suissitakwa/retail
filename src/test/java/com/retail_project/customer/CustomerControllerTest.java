@@ -45,7 +45,7 @@ public class CustomerControllerTest {
 
     @Test
     void testGetCustomers() throws Exception {
-        CustomerResponse customer = new CustomerResponse(1, "John", "Doe", "john@gmail.com", "1295 Montague Expressway");
+        CustomerResponse customer = new CustomerResponse(1, "John", "Doe", "john@gmail.com", "1295 Montague Expressway", Role.ROLE_ADMIN);
         when(customerService.getCustomers()).thenReturn(List.of(customer));
 
         mockMvc.perform(get("/api/v1/customers"))
@@ -55,7 +55,7 @@ public class CustomerControllerTest {
 
     @Test
     void testGetCustomerById_Found() throws Exception {
-        CustomerResponse customer = new CustomerResponse(1, "John", "Doe", "john@gmail.com", "1295 Montague Expressway");
+        CustomerResponse customer = new CustomerResponse(1, "John", "Doe", "john@gmail.com", "1295 Montague Expressway", Role.ROLE_ADMIN);
         when(customerService.getCustomerById(1)).thenReturn(customer);
 
         mockMvc.perform(get("/api/v1/customers/1"))
@@ -74,7 +74,7 @@ public class CustomerControllerTest {
     @Test
     void testCreateCustomer() throws Exception {
         CustomerRequest request = new CustomerRequest("John", "Doe", "john@gmail.com", "1295 Montague Expressway");
-        CustomerResponse response = new CustomerResponse(1, "John", "Doe", "john@gmail.com", "1295 Montague Expressway");
+        CustomerResponse response = new CustomerResponse(1, "John", "Doe", "john@gmail.com", "1295 Montague Expressway", Role.ROLE_ADMIN);
 
         when(customerService.createCustomer(any())).thenReturn(response);
 
@@ -89,7 +89,7 @@ public class CustomerControllerTest {
     @Test
     void testUpdateCustomer() throws Exception {
         CustomerRequest request = new CustomerRequest("Franklin", "Miller", "franklin@example.com", "1295 Montague Expressway");
-        CustomerResponse response = new CustomerResponse(1, "Franklin", "Miller", "franklin@example.com", "1295 Montague Expressway");
+        CustomerResponse response = new CustomerResponse(1, "Franklin", "Miller", "franklin@example.com", "1295 Montague Expressway", Role.ROLE_ADMIN);
 
         when(customerService.updateCustomer(eq(1), any())).thenReturn(response);
 

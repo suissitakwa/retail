@@ -4,6 +4,7 @@ import com.retail_project.category.Category;
 import com.retail_project.category.CategoryRepository;
 import com.retail_project.exceptions.CategoryNotFoundException;
 import com.retail_project.exceptions.ProductNotFoundException;
+import com.retail_project.inventory.Inventory;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.stylesheets.LinkStyle;
@@ -15,14 +16,24 @@ import java.util.List;
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private ProductMapper mapper;
+    private final  ProductMapper mapper;
     //todo create product
-    public ProductResponse createProduct(ProductRequest request){
+    public ProductResponse createProduct(ProductRequest request) {
         var category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new CategoryNotFoundException(request.categoryId()));
-        var product=mapper.toEntity(request, category);
+
+        var product = mapper.toEntity(request, category);
+
+
+        Inventory inv = new Inventory();
+        inv.setQuantity(50);
+        inv.setProduct(product);
+
+        product.setInventory(inv);
+
         return mapper.toResponse(productRepository.save(product));
     }
+
 
     //todo get all product
     public List<ProductResponse> getProducts(){

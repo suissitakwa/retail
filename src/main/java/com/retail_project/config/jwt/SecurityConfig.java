@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,6 +27,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 @EnableMethodSecurity(securedEnabled = true)
 
+
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
@@ -35,7 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(withDefaults())
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(
@@ -53,6 +55,12 @@ public class SecurityConfig {
                                        "/api/v1/stripe/webhook"
                                 )
                                 .permitAll()
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").permitAll()
+
+
+                                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/products/**").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/v1/products/**").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/products/**").hasAuthority("ROLE_ADMIN")
                                 .anyRequest()
                                 .authenticated()
 

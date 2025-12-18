@@ -71,9 +71,8 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/all-orders")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/admin/orders")
     public List<OrderResponse> getAllOrdersForAdmin() {
         return orderService.getAllOrders();
     }

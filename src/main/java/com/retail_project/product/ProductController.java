@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.apache.kafka.common.message.LeaderAndIsrResponseData;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +18,7 @@ public class ProductController {
     private final ProductService productService;
 
     //todo create product
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request ){
         return ResponseEntity.ok(productService.createProduct(request));
@@ -37,6 +40,7 @@ public class ProductController {
 
     //todo update product
     @Operation(summary = "Update product by id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable Integer id,@Valid @RequestBody ProductRequest request){
         return ResponseEntity.ok(productService.updateProduct(id,request));
@@ -44,6 +48,7 @@ public class ProductController {
 
 
     //todo delete product
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Delete product by id")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Integer id){

@@ -15,11 +15,14 @@ public class CustomerMapper {
 
     }
     public CustomerResponse toResponse(Customer customer){
-        return new CustomerResponse(customer.getId(),
+        return new CustomerResponse(
+                customer.getId(),
                 customer.getFirstname(),
                 customer.getLastname(),
                 customer.getEmail(),
-                customer.getAddress());
+                customer.getAddress(),
+                customer.getRole()
+        );
 
     }
 

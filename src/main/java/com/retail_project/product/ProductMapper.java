@@ -15,13 +15,16 @@ public class ProductMapper {
     }
 
     public ProductResponse toResponse(Product product) {
+        Integer qty = (product.getInventory() == null) ? null : product.getInventory().getQuantity();
+
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
                 product.getPrice(),
                 product.getCategory() != null ? product.getCategory().getId() : null,
-                product.getInventory().getQuantity(),product.getImageUrl()
+                qty
+                ,product.getImageUrl()
         );
     }
 
