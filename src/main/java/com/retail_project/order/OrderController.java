@@ -79,7 +79,7 @@ public class OrderController {
 
 
 
-
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Order> updateOrder(
             @PathVariable Integer id,
@@ -88,6 +88,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Integer id) {
         orderService.deleteOrder(id);

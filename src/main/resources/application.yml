@@ -1,66 +1,26 @@
-
 server:
   port: 8080
 
 stripe:
-  secret-key:  ${STRIPE_SECRET_KEY}
+  secret-key: ${STRIPE_SECRET_KEY}
   webhook:
     secret: ${STRIPE_WEBHOOK_SECRET}
   api-version: "2024-06-20"
+
 spring:
   application:
     name: retail
 
-  datasource:
-    # URL for local PostgreSQL instance on default port 5432
-    url: jdbc:postgresql://localhost:5432/retail_db
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
-      # Automatically update the database schema based on entities
       ddl-auto: none
-
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
   hikari:
-    # Setting max-lifetime to 9 minutes, 40 seconds (580,000ms).
-    # This ensures HikariCP closes connections proactively before the database's
-    # default idle timeout (usually 10 minutes) closes them, preventing the warning.
     max-lifetime: 580000
-    idle-timeout: 600000 # Default is 10 minutes (600000ms)
-    connection-timeout: 30000 # 30 seconds
-application:
-  security:
-    jwt:
-      secret-key: CcJSObeQbNRHUCZhZmXMn+Olke8mRnBPwbOhqKlqLQ0=
-      expiration: 8640000
-  kafka:
-
-    bootstrap-servers: localhost:9092
-
-    admin:
-      # Set to 'true' to allow Spring to automatically create topics (if defined)
-      auto-startup: true
-      properties:
-        # Increase the total operation timeout for AdminClient tasks (like creating topics) to 60 seconds
-        request.timeout.ms: 60000
-        # Increase the delay between connection retries to allow Kafka more time to start
-        retry.backoff.ms: 5000 # 5 seconds backoff instead of the default ~100ms
-        # Increase the overall API call timeout
-        default.api.timeout.ms: 60000 # 60 seconds
-
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      group-id: retail-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-
+    idle-timeout: 600000
+    connection-timeout: 30000
 
   flyway:
     enabled: true
@@ -69,10 +29,14 @@ application:
     baseline-on-migrate: true
     repair-on-migrate: true
 
-# --- ACTUATOR CONFIGURATION ---
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+      expiration: 8640000
+
 management:
   endpoints:
     web:
-      # Expose Actuator endpoints over the web (JMX is exposed by default)
       exposure:
         include: "health,info,metrics,prometheus"

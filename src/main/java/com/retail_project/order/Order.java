@@ -46,13 +46,13 @@ public class Order {
     @JoinColumn(name = "customer_id",nullable = false)
     private Customer customer;
 
-    @OneToMany(mappedBy = "order",cascade= CascadeType.ALL)
+    @OneToMany(mappedBy = "order",cascade= CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems=new ArrayList<>();
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)

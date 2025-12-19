@@ -155,13 +155,20 @@ public class OrderService {
 
     @Transactional
     public void deleteOrder(Integer id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
 
-        if (!orderRepository.existsById(id)) {
-            throw new OrderNotFoundException(id);
+
+        order.getOrderItems().clear();
+        order.getNotifications().clear();
+
+        if (order.getPayment() != null) {
+            order.setPayment(null);
         }
 
-        orderRepository.deleteById(id);
+        orderRepository.delete(order);
     }
+
 
     // ----------------------------------------------------------
     // Checkout + Stripe Session + Pending Payment

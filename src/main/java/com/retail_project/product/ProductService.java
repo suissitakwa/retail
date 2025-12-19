@@ -16,7 +16,7 @@ import java.util.List;
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final  ProductMapper mapper;
+    private ProductMapper mapper;
     //todo create product
     public ProductResponse createProduct(ProductRequest request) {
         var category = categoryRepository.findById(request.categoryId())
@@ -24,11 +24,9 @@ public class ProductService {
 
         var product = mapper.toEntity(request, category);
 
-
         Inventory inv = new Inventory();
         inv.setQuantity(50);
         inv.setProduct(product);
-
         product.setInventory(inv);
 
         return mapper.toResponse(productRepository.save(product));
