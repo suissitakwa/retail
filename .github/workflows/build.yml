@@ -29,7 +29,7 @@ jobs:
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t suissitakwa/retail-backend .
+        run: docker build -t suissitakwa/retail-backend:dev-latest .
 
       - name: Push Docker image
-        run: docker push suissitakwa/retail-backend
+        run: docker push suissitakwa/retail-backend:dev-latest
