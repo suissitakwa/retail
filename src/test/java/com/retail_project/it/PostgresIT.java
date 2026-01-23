@@ -8,7 +8,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-@SpringBootTest
+@SpringBootTest(properties = {
+
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration"
+})
 class PostgresIT {
 
     @Container
@@ -24,15 +27,10 @@ class PostgresIT {
         r.add("spring.datasource.username", postgres::getUsername);
         r.add("spring.datasource.password", postgres::getPassword);
 
-        //  Kafka/Redis are optional right now
-        r.add("spring.kafka.bootstrap-servers", () -> "localhost:9092");
-        r.add("spring.data.redis.host", () -> "localhost");
-        r.add("spring.data.redis.port", () -> "6379");
+
     }
 
     @Test
     void contextLoads() {
-        // If the Spring context starts + connects to Postgres, this passes.
     }
 }
-
