@@ -7,10 +7,19 @@ spring:
 
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-
     admin:
       auto-startup: true
       properties:
         request.timeout.ms: 60000
         retry.backoff.ms: 5000
         default.api.timeout.ms: 60000
+
+  # Redis connection (for dev: local OR docker-compose)
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  #  Use Redis as Spring Cache provider
+  cache:
+    type: redis

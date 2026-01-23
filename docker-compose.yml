@@ -53,6 +53,7 @@ services:
     depends_on:
       - retail-db
       - kafka
+      - redis
     env_file:
       - .env
     environment:
@@ -64,7 +65,10 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-
+     #Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_CACHE_TYPE: redis
   # ----------------------------------------
   # Database
   # ----------------------------------------
@@ -85,7 +89,17 @@ services:
       #timeout: 5s
       #retries: 5
       #start_period: 10s
-
+  # ----------------------------------------
+  # Redis (Cache)
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: retail-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
   # ----------------------------------------
   # Monitoring Services
   # ----------------------------------------
@@ -110,3 +124,4 @@ services:
 volumes:
   postgres_data:
   kafka_data:
+  redis_data:
