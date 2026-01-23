@@ -22,4 +22,5 @@ jobs:
 
       # Runs failsafe: integration-test + verify
       - name: Run Integration Tests
-        run: mvn -B -DskipTests=false verify
+        run: mvn -B clean verify -Dsurefire.skip=true -DskipUnitTests=true
+
