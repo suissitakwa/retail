@@ -11,20 +11,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class RetailApplication {
 
 	public static void main(String[] args) {
-		// Load .env values
-		Dotenv dotenv = Dotenv.configure()
+		// Load .env values and push them into System Properties automatically
+		Dotenv.configure()
+				.systemProperties()
 				.ignoreIfMissing()
 				.load();
 
-		setIfPresent("STRIPE_SECRET_KEY", dotenv.get("STRIPE_SECRET_KEY"));
-		setIfPresent("DB_USERNAME", dotenv.get("DB_USERNAME"));
-		setIfPresent("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
-		setIfPresent("STRIPE_WEBHOOK_SECRET", dotenv.get("STRIPE_WEBHOOK_SECRET"));
 		SpringApplication.run(RetailApplication.class, args);
-	}
-	private static void setIfPresent(String key, String value) {
-		if (value != null) {
-			System.setProperty(key, value);
-		}
 	}
 }
