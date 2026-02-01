@@ -8,6 +8,8 @@ stripe:
   api-version: "2024-06-20"
 
 spring:
+  profiles:
+    active: dev
   application:
     name: retail
 
