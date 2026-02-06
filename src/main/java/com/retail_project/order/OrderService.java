@@ -12,6 +12,7 @@ import com.retail_project.orderItem.OrderItemRequest;
 import com.retail_project.orderItem.OrderItemResponse;
 import com.retail_project.payment.PaymentResponse;
 import com.retail_project.payment.PaymentService;
+import com.retail_project.payment.PaymentStatus;
 import com.retail_project.product.Product;
 import com.retail_project.product.ProductRepository;
 import com.stripe.Stripe;
@@ -223,22 +224,30 @@ public class OrderService {
 
         Page<Order> page = orderRepository.findByCustomerId(customerId, pageable);
 
-        return page.map(order -> new OrderResponse(
-                order.getId(),
-                order.getReference(),
-                order.getTotalAmount(),
-                order.getPaymentMethod().name(),
-                order.getCustomer().getId(),
-                order.getOrderItems().stream()
-                        .map(oi -> new OrderItemResponse(
-                                oi.getId(),
-                                oi.getProduct().getId(),
-                                oi.getProduct().getName(),
-                                oi.getQuantity(),
-                                oi.getPrice()
-                        )).toList(),
-                order.getCreatedDate()
-        ));
+        return page.map(order -> {
+            var payment = order.getPayment();
+            var paymentStatus = (payment == null) ? null : payment.getStatus();
+            var paymentIntentId = (payment == null) ? null : payment.getStripePaymentIntentId();
+            return new OrderResponse(
+                    order.getId(),
+                    order.getReference(),
+                    order.getTotalAmount(),
+                    order.getPaymentMethod().name(),
+                    order.getCustomer().getId(),
+                    order.getOrderItems().stream()
+                            .map(oi -> new OrderItemResponse(
+                                    oi.getId(),
+                                    oi.getProduct().getId(),
+                                    oi.getProduct().getName(),
+                                    oi.getQuantity(),
+                                    oi.getPrice()
+                            )).toList(),
+                    order.getCreatedDate(),
+                    order.getStatus(),
+                    paymentStatus,
+                    paymentIntentId
+            );
+        });
     }
     public OrderResponse getOrderDetails(Integer orderId, int customerId) {
         Order order = orderRepository.findById(orderId)
@@ -247,6 +256,9 @@ public class OrderService {
         if (order.getCustomer().getId()!=customerId) {
             throw new RuntimeException("Unauthorized: Not your order");
         }
+        var payment = order.getPayment();
+        var paymentStatus = (payment == null) ? null : payment.getStatus();
+        var paymentIntentId = (payment == null) ? null : payment.getStripePaymentIntentId();
 
         return new OrderResponse(
                 order.getId(),
@@ -263,7 +275,10 @@ public class OrderService {
                                 oi.getPrice()
                         )
                 ).toList(),
-                order.getCreatedDate()
+                order.getCreatedDate(),
+                order.getStatus(),
+                paymentStatus,
+                paymentIntentId
         );
     }
     public Integer getCustomerIdByEmail(String email) {
@@ -272,5 +287,27 @@ public class OrderService {
                 .getId();
     }
 
+    @Transactional
+    public void cancelOrder(Integer orderId, Integer customerId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if (order.getCustomer().getId() != customerId) {
+            throw new RuntimeException("Unauthorized: Not your order");
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Only PENDING orders can be cancelled.");
+        }
+
+        var payment = order.getPayment();
+        if (payment != null && payment.getStatus() == PaymentStatus.PAID) {
+            throw new RuntimeException("Order is already paid. Please request a refund instead.");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+    }
 
 }

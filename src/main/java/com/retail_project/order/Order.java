@@ -56,7 +56,8 @@ public class Order {
     private List<Notification> notifications = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.PENDING;
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
