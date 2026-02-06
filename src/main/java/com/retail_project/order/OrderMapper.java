@@ -14,6 +14,9 @@ public class OrderMapper {
 
 
     public OrderResponse toResponse(Order order){
+        var payment = order.getPayment();
+        var paymentStatus = (payment == null) ? null : payment.getStatus();
+        var stripeId = (payment == null) ? null : payment.getStripePaymentIntentId();
         List<OrderItemResponse> itemResponses = order.getOrderItems().stream()
                 .map(orderItemMapper::toResponse)
                 .toList();
@@ -23,7 +26,10 @@ public class OrderMapper {
                 order.getPaymentMethod().name(),
                 order.getCustomer().getId(),
                 itemResponses,
-                order.getCreatedDate()
+                order.getCreatedDate(),
+                order.getStatus(),
+                paymentStatus,
+                stripeId
         );
     }
 }

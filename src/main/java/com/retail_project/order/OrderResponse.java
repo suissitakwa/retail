@@ -1,6 +1,7 @@
 package com.retail_project.order;
 
 import com.retail_project.orderItem.OrderItemResponse;
+import com.retail_project.payment.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,7 +14,13 @@ public record OrderResponse(
         String paymentMethod,
         Integer customerId,
         List<OrderItemResponse> items,
-        LocalDateTime createdDate
+        LocalDateTime createdDate,
+
+
+        OrderStatus status,
+        PaymentStatus paymentStatus,
+        String stripePaymentIntentId
+
 
 ) {
 }

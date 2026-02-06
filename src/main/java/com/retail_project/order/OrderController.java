@@ -87,6 +87,14 @@ public class OrderController {
     ) {
         return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Integer id, Authentication authentication) {
+        String email = authentication.getName();
+        Integer customerId = orderService.getCustomerIdByEmail(email);
+
+        orderService.cancelOrder(id, customerId);
+        return ResponseEntity.noContent().build();
+    }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
