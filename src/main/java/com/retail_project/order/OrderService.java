@@ -1,5 +1,7 @@
 package com.retail_project.order;
 
+import com.retail_project.Kafka.events.OrderEvent;
+import com.retail_project.Kafka.events.OrderEventItem;
 import com.retail_project.cart.Cart;
 import com.retail_project.cart.CartRepository;
 import com.retail_project.cartItem.CartItem;
@@ -7,6 +9,7 @@ import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
 import com.retail_project.exceptions.CustomerNotFoundException;
 import com.retail_project.exceptions.OrderNotFoundException;
+import com.retail_project.order.kafka.OrderProducer;
 import com.retail_project.orderItem.OrderItem;
 import com.retail_project.orderItem.OrderItemRequest;
 import com.retail_project.orderItem.OrderItemResponse;
@@ -40,9 +43,13 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final PaymentService paymentService;
     private final ProductRepository productRepository;
+    private final OrderProducer orderProducer;
 
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
+
+    @Value("${app.frontend.base-url:http://localhost:3000}")
+    private String frontendBaseUrl;
 
     // ----------------------------------------------------------------
     // Create order directly from a request (not used in checkout flow)
@@ -130,6 +137,17 @@ public class OrderService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
+        // Publish order.created event for inventory deduction and notification
+        List<OrderEventItem> eventItems = orderItems.stream()
+                .map(oi -> new OrderEventItem(oi.getProduct().getId(), oi.getQuantity()))
+                .toList();
+        orderProducer.sendOrderCreatedEvent(new OrderEvent(
+                saved.getId(),
+                customer.getId(),
+                saved.getTotalAmount(),
+                eventItems
+        ));
+
         return saved;
     }
 
@@ -185,8 +203,8 @@ public class OrderService {
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:3001/success?orderId=" + order.getId())
-                .setCancelUrl("http://localhost:3001/cancel")
+                .setSuccessUrl(frontendBaseUrl + "/success?orderId=" + order.getId())
+                .setCancelUrl(frontendBaseUrl + "/cancel")
                 // Attach orderId to PaymentIntent metadata (optional, now)
                 .setPaymentIntentData(
                         SessionCreateParams.PaymentIntentData.builder()
