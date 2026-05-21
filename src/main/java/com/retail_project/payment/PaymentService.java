@@ -1,8 +1,10 @@
 package com.retail_project.payment;
 
+import com.retail_project.Kafka.events.PaymentEvent;
 import com.retail_project.order.Order;
 import com.retail_project.order.OrderRepository;
 import com.retail_project.order.OrderStatus;
+import com.retail_project.payment.kafka.PaymentProducer;
 import com.stripe.model.checkout.Session;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final PaymentProducer paymentProducer;
 
     /**
      * Called right after creating the Stripe Session.
@@ -74,6 +77,14 @@ public class PaymentService {
 
                     orderRepository.save(order);
                     paymentRepository.save(payment);
+
+                    paymentProducer.sendPaymentProcessedEvent(new PaymentEvent(
+                            order.getId(),
+                            order.getCustomer().getId(),
+                            paymentIntentId,
+                            "PAID",
+                            payment.getAmount()
+                    ));
                 }, () -> {
                     System.out.println("⚠ No payment found for paymentIntentId=" + paymentIntentId);
 

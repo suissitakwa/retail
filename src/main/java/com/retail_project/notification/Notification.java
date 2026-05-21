@@ -26,6 +26,8 @@ public class Notification {
 
     private String message;
 
+    private boolean isRead = false;
+
    @ManyToOne
    @JoinColumn(name = "order_id",nullable = false)
    private Order order;
