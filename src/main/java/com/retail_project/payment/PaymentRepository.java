@@ -10,6 +10,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
 
     Optional<Payment> findByStripePaymentIntentId(String paymentIntentId);
 
+    Optional<Payment> findByOrderId(Integer orderId);
+
 
 }
 

@@ -321,10 +321,18 @@ public class OrderService {
 
         var payment = order.getPayment();
         if (payment != null && payment.getStatus() == PaymentStatus.PAID) {
-            throw new RuntimeException("Order is already paid. Please request a refund instead.");
+            paymentService.refundPayment(orderId);
         }
 
         order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Integer orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+        order.setStatus(newStatus);
         orderRepository.save(order);
     }
 

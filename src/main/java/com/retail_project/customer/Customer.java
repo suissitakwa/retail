@@ -26,6 +26,9 @@ public class Customer {
     private String password;
     private String address;
 
+    private String resetToken;
+    private java.time.LocalDateTime resetTokenExpiry;
+
     @OneToMany(mappedBy = "customer")
     private List<Order> orders = new ArrayList<>();
 

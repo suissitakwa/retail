@@ -3,6 +3,7 @@ package com.retail_project.order;
 import com.retail_project.customer.Customer;
 import com.retail_project.payment.CheckoutResponse;
 import com.retail_project.payment.PaymentResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +23,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
 
@@ -93,6 +94,15 @@ public class OrderController {
         Integer customerId = orderService.getCustomerIdByEmail(email);
 
         orderService.cancelOrder(id, customerId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> updateOrderStatus(
+            @PathVariable Integer id,
+            @RequestParam OrderStatus status) {
+        orderService.updateOrderStatus(id, status);
         return ResponseEntity.noContent().build();
     }
 

@@ -2,6 +2,8 @@ package com.retail_project.product;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.retail_project.config.jwt.JwtService;
+import com.retail_project.customer.CustomerRepository;
 import com.retail_project.exceptions.ProductNotFoundException;
 import com.retail_project.orderItem.OrderItemService;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,12 @@ public class ProductControllerTest {
 
     @MockitoBean
     private ProductService productService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomerRepository customerRepository;
 
     @Test
     void testGetProducts() throws Exception {

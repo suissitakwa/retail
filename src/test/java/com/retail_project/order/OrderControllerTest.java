@@ -1,6 +1,9 @@
 package com.retail_project.order;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.retail_project.config.jwt.JwtService;
+import com.retail_project.customer.CustomerRepository;
+import com.retail_project.orderItem.OrderItemRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -37,6 +40,12 @@ public class OrderControllerTest {
     @MockitoBean
     private OrderService orderService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomerRepository customerRepository;
+
     // --------------------------------------------------------------
     // TEST: GET all orders
     // --------------------------------------------------------------
@@ -67,7 +76,7 @@ public class OrderControllerTest {
                 new BigDecimal("100.00"),
                 "CREDIT_CARD",
                 2,
-                List.of()     // items omitted for simplicity
+                List.of(new OrderItemRequest(1, 2, new BigDecimal("50.00")))
         );
 
         Order saved = new Order();

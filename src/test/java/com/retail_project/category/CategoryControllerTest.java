@@ -1,7 +1,9 @@
 package com.retail_project.category;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.retail_project.config.jwt.JwtService;
 import com.retail_project.customer.CustomerController;
+import com.retail_project.customer.CustomerRepository;
 import com.retail_project.customer.CustomerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,12 @@ public class CategoryControllerTest {
 
     @MockitoBean
     private CategoryService categoryService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomerRepository customerRepository;
 
     @Test
     void testCreateCategory() throws Exception {
