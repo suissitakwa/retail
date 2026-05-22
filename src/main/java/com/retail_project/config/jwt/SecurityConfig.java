@@ -61,6 +61,7 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
                                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").permitAll()
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/categories/**").permitAll()
 
 
                                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/products/**").hasAuthority("ROLE_ADMIN")
