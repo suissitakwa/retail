@@ -3,10 +3,18 @@ spring:
   flyway:
     enabled: true   # run real migrations against the container DB
 
-  # Disable Kafka and Redis — not needed for integration tests
+  # Kafka: keep auto-config ON so KafkaTemplate bean is created (required by PaymentProducer/OrderProducer)
+  # but prevent any real broker connection at startup
+  kafka:
+    bootstrap-servers: localhost:19092   # dummy — no actual broker needed for auth/product tests
+    listener:
+      auto-startup: false               # don't start @KafkaListener consumers
+    admin:
+      fail-fast: false                  # don't crash if broker unreachable at startup
+
+  # Disable Redis only — not needed for integration tests
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
   cache:
