@@ -5,9 +5,14 @@ import com.retail_project.order.Order;
 import com.retail_project.order.OrderRepository;
 import com.retail_project.order.OrderStatus;
 import com.retail_project.payment.kafka.PaymentProducer;
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.RefundCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +24,9 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final PaymentProducer paymentProducer;
+
+    @Value("${stripe.secret-key}")
+    private String stripeSecretKey;
 
     /**
      * Called right after creating the Stripe Session.
@@ -87,7 +95,28 @@ public class PaymentService {
                     ));
                 }, () -> {
                     System.out.println("⚠ No payment found for paymentIntentId=" + paymentIntentId);
-
                 });
+    }
+
+    @Transactional
+    public void refundPayment(Integer orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Payment not found for orderId=" + orderId));
+
+        if (payment.getStatus() != PaymentStatus.PAID) {
+            throw new RuntimeException("Only PAID payments can be refunded");
+        }
+
+        try {
+            Stripe.apiKey = stripeSecretKey;
+            Refund.create(RefundCreateParams.builder()
+                    .setPaymentIntent(payment.getStripePaymentIntentId())
+                    .build());
+        } catch (StripeException e) {
+            throw new RuntimeException("Stripe refund failed: " + e.getMessage());
+        }
+
+        payment.setStatus(PaymentStatus.REFUNDED);
+        paymentRepository.save(payment);
     }
 }

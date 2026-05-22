@@ -2,8 +2,10 @@ package com.retail_project.cart;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.retail_project.cartItem.CartItemRequest;
+import com.retail_project.config.jwt.JwtService;
 import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
+import com.retail_project.customer.CustomerRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -34,9 +36,10 @@ class CartControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private CartService cartService;
+    @MockitoBean private CartService cartService;
     @MockitoBean private Authentication authentication;
+    @MockitoBean private JwtService jwtService;
+    @MockitoBean private CustomerRepository customerRepository;
 
     // Utility: mock authentication → returns a Customer object
     private void mockAuthWithCustomer(int customerId) {

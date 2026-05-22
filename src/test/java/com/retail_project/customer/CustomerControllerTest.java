@@ -3,8 +3,10 @@ package com.retail_project.customer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.retail_project.config.jwt.JwtService;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerController;
+import com.retail_project.customer.CustomerRepository;
 import com.retail_project.customer.CustomerService;
 import com.retail_project.exceptions.CustomerNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -38,7 +40,13 @@ public class CustomerControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private  CustomerService customerService;
+    private CustomerService customerService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomerRepository customerRepository;
 
 
 

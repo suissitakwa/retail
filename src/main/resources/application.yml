@@ -36,6 +36,7 @@ application:
     jwt:
       secret-key: ${JWT_SECRET_KEY}
       expiration: 8640000
+      refresh-expiration: 604800000
 
 management:
   endpoints:

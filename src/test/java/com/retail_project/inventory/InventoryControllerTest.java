@@ -1,9 +1,12 @@
 package com.retail_project.inventory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.retail_project.config.jwt.JwtService;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerController;
+import com.retail_project.customer.CustomerRepository;
 import com.retail_project.customer.CustomerService;
+import com.retail_project.product.ProductRepository;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
@@ -33,6 +36,15 @@ public class InventoryControllerTest {
 
     @MockitoBean
     private InventoryService inventoryService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomerRepository customerRepository;
+
+    @MockitoBean
+    private ProductRepository productRepository;
 
     @Test
     void testGetInventoryByProductId() throws Exception {

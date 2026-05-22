@@ -1,0 +1,19 @@
+spring:
+  # No real DB needed — @WebMvcTest slices don't load JPA/Flyway
+  flyway:
+    enabled: false
+
+  # Disable Kafka listeners in test slice
+  kafka:
+    listener:
+      auto-startup: false
+
+  # Disable Redis cache — not needed in web slice tests
+  cache:
+    type: none
+
+  # Suppress Redis auto-configuration warnings
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
