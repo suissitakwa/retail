@@ -1,0 +1,29 @@
+# Railway deployment profile
+# Kafka and Redis are disabled — free tier has neither
+# PostgreSQL is provided by Railway's Postgres plugin
+
+spring:
+  cache:
+    type: none
+
+  kafka:
+    bootstrap-servers: localhost:9092   # unused — listener auto-startup is false
+
+  datasource:
+    url: ${DATABASE_URL}                # injected by Railway Postgres plugin
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    url: ${DATABASE_URL}
+    user: ${PGUSER}
+    password: ${PGPASSWORD}
+
+kafka:
+  enabled: false                        # disables all Kafka listener auto-startup
+
+logging:
+  level:
+    root: INFO
+    com.retail_project: DEBUG
