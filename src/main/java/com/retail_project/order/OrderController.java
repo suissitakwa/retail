@@ -29,8 +29,8 @@ public class OrderController {
 
 
     @PostMapping("/checkout")
-    public ResponseEntity<CheckoutResponse> checkoutCart(@RequestParam Integer customerId) throws Exception {
-
+    public ResponseEntity<CheckoutResponse> checkoutCart(Authentication authentication) throws Exception {
+        Integer customerId = orderService.getCustomerIdByEmail(authentication.getName());
         PaymentResponse response = orderService.checkoutAndInitiatePayment(customerId);
 
         return ResponseEntity.ok(
@@ -47,7 +47,6 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size) {
 
         String email = authentication.getName();
-        System.out.println("inside getMyOrders checkoutAndInitiatePayment this is my email: "+email);
         Integer customerId = orderService.getCustomerIdByEmail(email);
 
         Page<OrderResponse> orders = orderService.getOrdersForCustomer(

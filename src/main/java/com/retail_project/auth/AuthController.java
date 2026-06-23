@@ -7,6 +7,8 @@ import com.retail_project.customer.CustomerRepository;
 import com.retail_project.customer.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +26,8 @@ import java.util.UUID;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
@@ -87,8 +91,8 @@ public class AuthController {
             customer.setResetToken(token);
             customer.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
             customerRepository.save(customer);
-            // In production: send email with reset link containing the token
-            System.out.println("Password reset token for " + email + ": " + token);
+            // TODO: integrate email service to send reset link to customer
+            log.info("Password reset requested for {}", email);
         });
         // Always return 200 to avoid user enumeration
         return ResponseEntity.ok().build();
