@@ -34,20 +34,21 @@ public class CustomerController {
         return customerService.getCustomers();
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Get customer by ID")
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable int id ){
         return ResponseEntity.ok(customerService.getCustomerById(id));
-
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Update customer by ID")
     @PutMapping("/{id}")
-    ResponseEntity<CustomerResponse> updateCustomer(@PathVariable int id,@RequestBody CustomerRequest request){
-
+    ResponseEntity<CustomerResponse> updateCustomer(@PathVariable int id, @RequestBody CustomerRequest request){
         return ResponseEntity.ok(customerService.updateCustomer(id, request));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Delete customer by ID")
     @DeleteMapping("/{id}")
     ResponseEntity<?> deleteCustomer(@PathVariable int id){
@@ -65,7 +66,6 @@ public class CustomerController {
         } else {
             email = authentication.getName();
         }
-        System.out.println("Authentication email "+email);
         CustomerResponse profile = customerService.getCustomerByEmail(email);
         return ResponseEntity.ok(profile);
     }

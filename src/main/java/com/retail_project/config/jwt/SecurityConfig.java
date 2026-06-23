@@ -46,18 +46,7 @@ public class SecurityConfig {
                                         "/auth/refresh",
                                         "/auth/forgot-password",
                                         "/auth/reset-password",
-                                        "/api/v1/copilot/**",
-                                        "/v2/api-docs",
-                                        "/v3/api-docs",
-                                        "/v3/api-docs/**",
-                                        "/swagger-resources",
-                                        "/swagger-resources/**",
-                                        "/configuration/ui",
-                                        "/configuration/security",
-                                        "/swagger-ui/**",
-                                        "/webjars/**",
-                                        "/swagger-ui.html",
-                                       "/api/v1/stripe/webhook"
+                                        "/api/v1/stripe/webhook"
                                 )
                                 .permitAll()
                                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/products/**").permitAll()
