@@ -2,7 +2,10 @@
 
 [![CI](https://github.com/suissitakwa/retail/actions/workflows/build.yml/badge.svg)](https://github.com/suissitakwa/retail/actions/workflows/build.yml)
 
-Production-style e-commerce backend built to demonstrate backend engineering, cloud-native delivery, and AI integration. Deployed to **Google Kubernetes Engine (GKE)** via a Jenkins CD pipeline.
+Production-style e-commerce backend built to demonstrate backend engineering, cloud-native delivery, and AI integration.
+
+**Live demo:** [retail-novamart.netlify.app](https://retail-novamart.netlify.app) — frontend on Netlify, backend on Railway  
+**Production infra:** Kubernetes manifests + Jenkins CD pipeline targeting GKE ([retail-infra](https://github.com/suissitakwa/retail-infra))
 
 **Frontend:** https://github.com/suissitakwa/retail-ui  
 **Microservices layer:** https://github.com/suissitakwa/retail-microservices  
@@ -16,7 +19,7 @@ Production-style e-commerce backend built to demonstrate backend engineering, cl
 | Concern | Technology |
 |---|---|
 | Runtime | Java 17, Spring Boot 3.5 |
-| Persistence | PostgreSQL + Spring Data JPA + Flyway (migrations V1–V5) |
+| Persistence | PostgreSQL + Spring Data JPA + Flyway (migrations V1–V6) |
 | Caching | Redis via Spring Cache (`spring.cache.type=redis`) |
 | Messaging | Apache Kafka — async order + payment event flow |
 | Payments | Stripe (session checkout + webhook-driven confirmation) |
@@ -167,12 +170,39 @@ git push → GitHub Actions (build.yml)
              ├── integration tests (Testcontainers)
              ├── docker build + push to registry
              └── LLM PR diff summarizer (llm-pr-summary.yml)
-                      ↓
-           Jenkins (retail-infra/Jenkinsfile)
-             ├── apply k8s manifests (namespace, secrets, postgres, redis)
-             ├── deploy backend + UI
-             └── rollout status check
+                      │
+           ┌──────────┴──────────────┐
+           ▼                         ▼
+     Railway (live demo)        Jenkins → GKE (production infra)
+     auto-deploy on push        ├── apply k8s manifests
+     Postgres plugin            ├── deploy backend + UI
+     KAFKA_ENABLED=false        └── rollout status check
 ```
+
+---
+
+## Deploy to Railway (live demo)
+
+1. Create a Railway project and add the **Postgres** plugin
+2. Set the following environment variables in the Railway dashboard:
+
+| Variable | Value |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `SPRING_DATASOURCE_URL` | `jdbc:${{Postgres.DATABASE_URL}}` |
+| `SPRING_DATASOURCE_USERNAME` | `${{Postgres.PGUSER}}` |
+| `SPRING_DATASOURCE_PASSWORD` | `${{Postgres.PGPASSWORD}}` |
+| `KAFKA_ENABLED` | `false` |
+| `SPRING_CACHE_TYPE` | `none` |
+| `STRIPE_SECRET_KEY` | `sk_live_...` |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` |
+| `JWT_SECRET_KEY` | 32+ char random string |
+| `OPENAI_API_KEY` | `sk-...` |
+| `APP_CORS_ALLOWED_ORIGINS` | `https://retail-novamart.netlify.app` |
+| `APP_FRONTEND_BASE_URL` | `https://retail-novamart.netlify.app` |
+
+3. Connect the GitHub repo — Railway will build from `Dockerfile` automatically
+4. Once deployed, set `REACT_APP_API_URL=<your-railway-url>` in the Netlify dashboard for the frontend
 
 ---
 
