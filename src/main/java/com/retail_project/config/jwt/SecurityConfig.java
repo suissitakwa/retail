@@ -44,6 +44,7 @@ public class SecurityConfig {
                                         "/auth/login",
                                         "/auth/register",
                                         "/auth/refresh",
+                                        "/auth/logout",
                                         "/auth/forgot-password",
                                         "/auth/reset-password",
                                         "/api/v1/stripe/webhook"

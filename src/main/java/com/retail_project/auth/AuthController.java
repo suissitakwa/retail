@@ -1,5 +1,6 @@
 package com.retail_project.auth;
 
+import com.retail_project.auth.revocation.TokenRevocationService;
 import com.retail_project.config.jwt.JwtService;
 import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
@@ -33,6 +34,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final TokenRevocationService tokenRevocationService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest request) {
@@ -70,6 +72,9 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> body) {
         String refreshToken = body.get("refreshToken");
+        if (tokenRevocationService.isRevoked(refreshToken)) {
+            return ResponseEntity.status(401).build();
+        }
         String email = jwtService.extractEmail(refreshToken);
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Customer not found"));
@@ -77,10 +82,21 @@ public class AuthController {
         if (!jwtService.isTokenValid(refreshToken, userDetails)) {
             return ResponseEntity.status(401).build();
         }
+        // Rotate: revoke the used refresh token and issue new pair
+        tokenRevocationService.revoke(refreshToken);
         return ResponseEntity.ok(new AuthResponse(
                 jwtService.generateToken(userDetails),
                 jwtService.generateRefreshToken(userDetails)
         ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            tokenRevocationService.revoke(refreshToken);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/forgot-password")
