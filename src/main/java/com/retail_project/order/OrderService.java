@@ -21,6 +21,7 @@ import com.retail_project.product.ProductRepository;
 import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -192,6 +193,7 @@ public class OrderService {
     // ----------------------------------------------------------
     // Checkout + Stripe Session + Pending Payment
     // ----------------------------------------------------------
+    @CircuitBreaker(name = "stripe", fallbackMethod = "checkoutFallback")
     @Transactional
     public PaymentResponse checkoutAndInitiatePayment(Integer customerId) throws Exception {
 
@@ -238,6 +240,10 @@ public class OrderService {
         // 3. Save PENDING payment linked to this session
         return paymentService.createPendingPayment(order, session);
     }
+    public PaymentResponse checkoutFallback(Integer customerId, Throwable t) {
+        throw new RuntimeException("Payment service is temporarily unavailable. Please try again in a moment.");
+    }
+
     public Page<OrderResponse> getOrdersForCustomer(Integer customerId, Pageable pageable) {
 
         Page<Order> page = orderRepository.findByCustomerId(customerId, pageable);
