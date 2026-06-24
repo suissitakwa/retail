@@ -12,6 +12,8 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.RefundCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
@@ -63,7 +67,7 @@ public class PaymentService {
         payment.setStripePaymentIntentId(paymentIntentId);
         paymentRepository.save(payment);
 
-        System.out.println("Attached paymentIntentId: " + paymentIntentId);
+        log.debug("Attached paymentIntentId {} to session {}", paymentIntentId, sessionId);
     }
 
     /**
@@ -75,7 +79,7 @@ public class PaymentService {
 
         paymentRepository.findByStripePaymentIntentId(paymentIntentId)
                 .ifPresentOrElse(payment -> {
-                    System.out.println("✅ Marking payment as PAID for intentId=" + paymentIntentId);
+                    log.info("Marking payment as PAID for intentId={}", paymentIntentId);
 
                     payment.setStatus(PaymentStatus.PAID);
                     payment.setPaidAt(LocalDateTime.now());
@@ -93,9 +97,7 @@ public class PaymentService {
                             "PAID",
                             payment.getAmount()
                     ));
-                }, () -> {
-                    System.out.println("⚠ No payment found for paymentIntentId=" + paymentIntentId);
-                });
+                }, () -> log.warn("No payment found for paymentIntentId={}", paymentIntentId));
     }
 
     @Transactional

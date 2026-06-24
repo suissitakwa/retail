@@ -9,6 +9,7 @@ import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 import com.retail_project.order.OrderResponse;
 import com.retail_project.order.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,7 @@ public class CopilotService {
             .putAdditionalProperty("required", JsonValue.from(List.of("orderId")))
             .build();
 
+    @CircuitBreaker(name = "openai", fallbackMethod = "chatFallback")
     public CopilotResponse chat(CopilotRequest req, Authentication auth) {
         String email = auth.getName();
         Integer customerId = orderService.getCustomerIdByEmail(email);
@@ -80,43 +82,44 @@ public class CopilotService {
                         .build())
                 .build();
 
-        try {
-            var response = openAIClient.chat().completions().create(params);
-            var message = response.choices().get(0).message();
-            var toolCalls = message.toolCalls().orElse(List.of());
+        var response = openAIClient.chat().completions().create(params);
+        var message = response.choices().get(0).message();
+        var toolCalls = message.toolCalls().orElse(List.of());
 
-            if (toolCalls.isEmpty()) {
-                return new CopilotResponse(
-                        message.content().orElse("I'm here to help with your orders."),
-                        actions);
-            }
-
-            // Execute tool calls and build follow-up
-            var followUp = ChatCompletionCreateParams.builder()
-                    .model(MODEL)
-                    .addSystemMessage("You are a retail support assistant. Answer in 2-4 sentences using only the provided tool results.")
-                    .addUserMessage(context)
-                    .addMessage(message);
-
-            for (var toolCall : toolCalls) {
-                if (!toolCall.isFunction()) continue;
-                var fn = toolCall.asFunction();
-                String toolResult = dispatch(fn.function().name(), fn.function().arguments(), customerId, actions);
-                followUp.addMessage(ChatCompletionToolMessageParam.builder()
-                        .toolCallId(fn.id())
-                        .content(toolResult)
-                        .build());
-            }
-
-            var finalResponse = openAIClient.chat().completions().create(followUp.build());
-            String answer = finalResponse.choices().get(0).message().content()
-                    .orElse("I've looked into your order. Please see the details below.");
-            return new CopilotResponse(answer, actions);
-
-        } catch (Exception e) {
-            log.error("Copilot error: {}", e.getMessage());
-            return new CopilotResponse("Something went wrong. Please try again.", actions);
+        if (toolCalls.isEmpty()) {
+            return new CopilotResponse(
+                    message.content().orElse("I'm here to help with your orders."),
+                    actions);
         }
+
+        // Execute tool calls and build follow-up
+        var followUp = ChatCompletionCreateParams.builder()
+                .model(MODEL)
+                .addSystemMessage("You are a retail support assistant. Answer in 2-4 sentences using only the provided tool results.")
+                .addUserMessage(context)
+                .addMessage(message);
+
+        for (var toolCall : toolCalls) {
+            if (!toolCall.isFunction()) continue;
+            var fn = toolCall.asFunction();
+            String toolResult = dispatch(fn.function().name(), fn.function().arguments(), customerId, actions);
+            followUp.addMessage(ChatCompletionToolMessageParam.builder()
+                    .toolCallId(fn.id())
+                    .content(toolResult)
+                    .build());
+        }
+
+        var finalResponse = openAIClient.chat().completions().create(followUp.build());
+        String answer = finalResponse.choices().get(0).message().content()
+                .orElse("I've looked into your order. Please see the details below.");
+        return new CopilotResponse(answer, actions);
+    }
+
+    public CopilotResponse chatFallback(CopilotRequest req, Authentication auth, Throwable t) {
+        log.warn("OpenAI circuit breaker triggered: {}", t.getMessage());
+        return new CopilotResponse(
+                "The AI assistant is temporarily unavailable. You can still view your orders in the Orders section.",
+                List.of());
     }
 
     private String dispatch(String toolName, String argsJson, Integer customerId, List<CopilotAction> actions) {
