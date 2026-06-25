@@ -150,7 +150,7 @@ public class OrderService {
                     eventItems
             ));
         } catch (Exception e) {
-            logger.warn("Kafka unavailable — order.created event not sent for order {}: {}", saved.getId(), e.getMessage());
+            // Kafka unavailable — checkout continues without inventory event
         }
 
         return saved;
