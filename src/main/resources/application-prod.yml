@@ -35,7 +35,10 @@ spring:
         spring.json.trusted.packages: "com.retail_project.*"
         spring.json.add.type.headers: false
     listener:
-      auto-startup: ${KAFKA_ENABLED:true}
+      # No Kafka broker on Railway — default OFF so the consumer never blocks
+      # startup trying to reach localhost:9092. Set KAFKA_ENABLED=true only
+      # where a real broker exists.
+      auto-startup: ${KAFKA_ENABLED:false}
 
   cache:
     type: ${SPRING_CACHE_TYPE:none}
