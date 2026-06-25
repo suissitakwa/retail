@@ -1,6 +1,17 @@
 spring:
+  # No Redis instance on Railway — exclude its auto-config so Lettuce/Netty
+  # never initialize (they allocate off-heap direct memory that pushes the
+  # container past its 1 GB RSS limit).
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
   datasource:
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
 
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -26,13 +37,14 @@ spring:
     listener:
       auto-startup: ${KAFKA_ENABLED:true}
 
-  data:
-    redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
-
   cache:
-    type: ${SPRING_CACHE_TYPE:redis}
+    type: ${SPRING_CACHE_TYPE:none}
+
+server:
+  tomcat:
+    threads:
+      max: 20
+      min-spare: 2
 
 management:
   health:
