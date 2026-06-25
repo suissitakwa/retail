@@ -2,9 +2,9 @@ server:
   port: ${PORT:8080}
 
 stripe:
-  secret-key: ${STRIPE_SECRET_KEY}
+  secret-key: ${STRIPE_SECRET_KEY:sk_test_missing}
   webhook:
-    secret: ${STRIPE_WEBHOOK_SECRET}
+    secret: ${STRIPE_WEBHOOK_SECRET:whsec_missing}
   api-version: "2024-06-20"
 
 spring:
