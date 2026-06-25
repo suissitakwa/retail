@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "java -XX:MaxRAMPercentage=50.0 -XX:+UseContainerSupport -XX:MaxMetaspaceSize=150m -Xss256k -jar app.jar"
+startCommand = "java -XX:MaxRAMPercentage=40.0 -XX:+UseContainerSupport -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=64m -Xss256k -jar app.jar"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
