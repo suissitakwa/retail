@@ -26,6 +26,10 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+        max.block.ms: 1000
+        retries: 0
+        reconnect.backoff.ms: 60000
+        reconnect.backoff.max.ms: 300000
     consumer:
       group-id: retail-backend
       auto-offset-reset: earliest
