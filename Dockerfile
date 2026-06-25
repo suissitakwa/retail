@@ -2,12 +2,12 @@
 FROM maven:3.8.7-eclipse-temurin-17 AS builder
 WORKDIR /app
 
-# Copy project files
+# Copy dependencies first for better layer caching
 COPY pom.xml .
-COPY src ./src
+RUN mvn dependency:go-offline -q
 
-# Compile and package the Spring Boot app into a JAR
-RUN mvn clean package -DskipTests
+COPY src ./src
+RUN mvn package -DskipTests -o
 
 # Stage 2: Runtime - Create a lean final image
 FROM eclipse-temurin:17-jre-jammy
