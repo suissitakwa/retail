@@ -142,12 +142,16 @@ public class OrderService {
         List<OrderEventItem> eventItems = orderItems.stream()
                 .map(oi -> new OrderEventItem(oi.getProduct().getId(), oi.getQuantity()))
                 .toList();
-        orderProducer.sendOrderCreatedEvent(new OrderEvent(
-                saved.getId(),
-                customer.getId(),
-                saved.getTotalAmount(),
-                eventItems
-        ));
+        try {
+            orderProducer.sendOrderCreatedEvent(new OrderEvent(
+                    saved.getId(),
+                    customer.getId(),
+                    saved.getTotalAmount(),
+                    eventItems
+            ));
+        } catch (Exception e) {
+            logger.warn("Kafka unavailable — order.created event not sent for order {}: {}", saved.getId(), e.getMessage());
+        }
 
         return saved;
     }
@@ -241,8 +245,7 @@ public class OrderService {
         return paymentService.createPendingPayment(order, session);
     }
     public PaymentResponse checkoutFallback(Integer customerId, Throwable t) {
-        String cause = t != null ? t.getClass().getSimpleName() + ": " + t.getMessage() : "unknown";
-        throw new RuntimeException("Checkout failed: " + cause);
+        throw new RuntimeException("Payment service is temporarily unavailable. Please try again in a moment.");
     }
 
     public Page<OrderResponse> getOrdersForCustomer(Integer customerId, Pageable pageable) {
