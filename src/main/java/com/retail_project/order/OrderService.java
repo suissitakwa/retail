@@ -241,7 +241,8 @@ public class OrderService {
         return paymentService.createPendingPayment(order, session);
     }
     public PaymentResponse checkoutFallback(Integer customerId, Throwable t) {
-        throw new RuntimeException("Payment service is temporarily unavailable. Please try again in a moment.");
+        String cause = t != null ? t.getClass().getSimpleName() + ": " + t.getMessage() : "unknown";
+        throw new RuntimeException("Checkout failed: " + cause);
     }
 
     public Page<OrderResponse> getOrdersForCustomer(Integer customerId, Pageable pageable) {
