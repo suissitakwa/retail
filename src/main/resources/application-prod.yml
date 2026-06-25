@@ -30,6 +30,7 @@ spring:
         retries: 0
         reconnect.backoff.ms: 60000
         reconnect.backoff.max.ms: 300000
+        buffer.memory: 1048576
     consumer:
       group-id: retail-backend
       auto-offset-reset: earliest
