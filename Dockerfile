@@ -14,4 +14,9 @@ COPY --from=builder /app/target/*.jar app.jar
 
 # Expose port and define startup command
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", \
+  "-XX:MaxRAMPercentage=50.0", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxMetaspaceSize=160m", \
+  "-XX:ReservedCodeCacheSize=64m", \
+  "-jar", "app.jar"]
