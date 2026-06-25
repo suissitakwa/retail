@@ -7,7 +7,7 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -q
 
 COPY src ./src
-RUN mvn package -DskipTests -o
+RUN mvn package -DskipTests
 
 # Stage 2: Runtime - Create a lean final image
 FROM eclipse-temurin:17-jre-jammy
