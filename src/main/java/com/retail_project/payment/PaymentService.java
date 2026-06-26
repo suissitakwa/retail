@@ -90,13 +90,17 @@ public class PaymentService {
                     orderRepository.save(order);
                     paymentRepository.save(payment);
 
-                    paymentProducer.sendPaymentProcessedEvent(new PaymentEvent(
-                            order.getId(),
-                            order.getCustomer().getId(),
-                            paymentIntentId,
-                            "PAID",
-                            payment.getAmount()
-                    ));
+                    try {
+                        paymentProducer.sendPaymentProcessedEvent(new PaymentEvent(
+                                order.getId(),
+                                order.getCustomer().getId(),
+                                paymentIntentId,
+                                "PAID",
+                                payment.getAmount()
+                        ));
+                    } catch (Exception e) {
+                        // Kafka unavailable — payment marked PAID, notification skipped
+                    }
                 }, () -> log.warn("No payment found for paymentIntentId={}", paymentIntentId));
     }
 
