@@ -12,9 +12,13 @@ import com.retail_project.order.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,19 @@ public class CopilotService {
             .putAdditionalProperty("required", JsonValue.from(List.of("orderId")))
             .build();
 
+    private static final FunctionParameters NO_PARAMS = FunctionParameters.builder()
+            .putAdditionalProperty("type", JsonValue.from("object"))
+            .putAdditionalProperty("properties", JsonValue.from(Map.of()))
+            .putAdditionalProperty("required", JsonValue.from(List.of()))
+            .build();
+
+    private static final FunctionParameters LIMIT_PARAMS = FunctionParameters.builder()
+            .putAdditionalProperty("type", JsonValue.from("object"))
+            .putAdditionalProperty("properties", JsonValue.from(Map.of(
+                    "limit", Map.of("type", "integer", "description", "Number of recent orders to fetch (default 5, max 10)"))))
+            .putAdditionalProperty("required", JsonValue.from(List.of()))
+            .build();
+
     @CircuitBreaker(name = "openai", fallbackMethod = "chatFallback")
     public CopilotResponse chat(CopilotRequest req, Authentication auth) {
         String email = auth.getName();
@@ -52,17 +69,30 @@ public class CopilotService {
         var params = ChatCompletionCreateParams.builder()
                 .model(MODEL)
                 .addSystemMessage("""
-                        You are a retail support assistant. Rules:
-                        1. Call fetch_order before answering any order-specific question.
-                        2. Call cancel_order only if the user explicitly asks to cancel.
-                        3. Call open_order_details or check_payment_status to suggest navigation.
-                        4. Never invent order data — only use what the tools return.
-                        5. Keep responses to 2-4 sentences.
+                        You are a retail support assistant for NovaMart. Rules:
+                        1. If the user asks about their latest/recent orders, spending, or purchases WITHOUT a specific order ID, call fetch_recent_orders first.
+                        2. If the user provides or mentions a specific order ID, call fetch_order with that ID.
+                        3. If the user asks about spending or total amount spent, call fetch_spending_summary.
+                        4. Call cancel_order only if the user explicitly asks to cancel a specific order.
+                        5. Call open_order_details or check_payment_status to suggest navigation for a specific order.
+                        6. Never invent order data — only use what the tools return.
+                        7. Keep responses friendly and concise (2-4 sentences).
+                        8. If no orders exist, tell the user they have no orders yet.
                         """)
                 .addUserMessage(context)
                 .addFunctionTool(FunctionDefinition.builder()
+                        .name("fetch_recent_orders")
+                        .description("Fetch the customer's most recent orders. Use this when the user asks about their latest order, recent purchases, or order history without specifying an order ID.")
+                        .parameters(LIMIT_PARAMS)
+                        .build())
+                .addFunctionTool(FunctionDefinition.builder()
+                        .name("fetch_spending_summary")
+                        .description("Calculate how much the customer has spent in total and over the last 30 days. Use this when the user asks about spending, total spent, or money questions.")
+                        .parameters(NO_PARAMS)
+                        .build())
+                .addFunctionTool(FunctionDefinition.builder()
                         .name("fetch_order")
-                        .description("Retrieve details of a specific order. Call this whenever the user asks about an order.")
+                        .description("Retrieve details of a specific order by ID. Call this only when a specific order ID is known.")
                         .parameters(ORDER_ID_PARAMS)
                         .build())
                 .addFunctionTool(FunctionDefinition.builder()
@@ -125,6 +155,8 @@ public class CopilotService {
     private String dispatch(String toolName, String argsJson, Integer customerId, List<CopilotAction> actions) {
         Integer orderId = extractOrderId(argsJson);
         return switch (toolName) {
+            case "fetch_recent_orders" -> fetchRecentOrders(argsJson, customerId, actions);
+            case "fetch_spending_summary" -> fetchSpendingSummary(customerId);
             case "fetch_order" -> fetchOrderFacts(orderId, customerId);
             case "cancel_order" -> handleCancel(orderId, customerId, actions);
             case "open_order_details" -> {
@@ -147,6 +179,57 @@ public class CopilotService {
             return node.has("orderId") ? node.get("orderId").asInt() : null;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    private String fetchRecentOrders(String argsJson, Integer customerId, List<CopilotAction> actions) {
+        int limit = 5;
+        try {
+            var node = MAPPER.readTree(argsJson);
+            if (node.has("limit")) limit = Math.min(node.get("limit").asInt(), 10);
+        } catch (Exception ignored) {}
+
+        try {
+            var page = orderService.getOrdersForCustomer(
+                    customerId,
+                    PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdDate")));
+            var orders = page.getContent();
+            if (orders.isEmpty()) return "The customer has no orders.";
+
+            actions.add(new CopilotAction("OPEN_ORDERS", Map.of(), "View all orders"));
+
+            return orders.stream()
+                    .map(o -> String.format("Order #%d (%s) — %s — $%.2f — %s",
+                            o.id(), o.reference(), o.status(), o.totalAmount(), o.createdDate().toLocalDate()))
+                    .collect(Collectors.joining("\n"));
+        } catch (Exception e) {
+            return "Could not retrieve orders.";
+        }
+    }
+
+    private String fetchSpendingSummary(Integer customerId) {
+        try {
+            var page = orderService.getOrdersForCustomer(
+                    customerId,
+                    PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "createdDate")));
+            var orders = page.getContent();
+            if (orders.isEmpty()) return "The customer has no orders and has spent $0.00.";
+
+            BigDecimal total = orders.stream()
+                    .map(OrderResponse::totalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+            BigDecimal last30 = orders.stream()
+                    .filter(o -> o.createdDate() != null && o.createdDate().isAfter(thirtyDaysAgo))
+                    .map(OrderResponse::totalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            return String.format(
+                    "Total spent across all %d orders: $%.2f. Spent in the last 30 days: $%.2f.",
+                    orders.size(), total, last30);
+        } catch (Exception e) {
+            return "Could not retrieve spending data.";
         }
     }
 
