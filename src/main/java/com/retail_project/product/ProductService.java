@@ -71,6 +71,10 @@ public class ProductService {
         return mapper.toResponse(productRepository.save(product));
     }
 
+    public List<ProductResponse> searchProducts(String name) {
+        return productRepository.findByNameContainingIgnoreCase(name).stream().map(mapper::toResponse).toList();
+    }
+
     // Delete: evict productById + list cache
     @Caching(evict = {
             @CacheEvict(cacheNames = "productById", key = "#id"),

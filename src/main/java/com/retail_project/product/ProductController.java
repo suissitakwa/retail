@@ -47,6 +47,12 @@ public class ProductController {
     }
 
 
+    @Operation(summary = "Search products by name")
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String q) {
+        return ResponseEntity.ok(productService.searchProducts(q));
+    }
+
     //todo delete product
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Delete product by id")
