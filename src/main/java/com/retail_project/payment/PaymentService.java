@@ -1,9 +1,11 @@
 package com.retail_project.payment;
 
 import com.retail_project.Kafka.events.PaymentEvent;
+import com.retail_project.email.EmailService;
 import com.retail_project.order.Order;
 import com.retail_project.order.OrderRepository;
 import com.retail_project.order.OrderStatus;
+import com.retail_project.orderItem.OrderItem;
 import com.retail_project.payment.kafka.PaymentProducer;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final PaymentProducer paymentProducer;
+    private final EmailService emailService;
 
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
@@ -89,6 +93,21 @@ public class PaymentService {
 
                     orderRepository.save(order);
                     paymentRepository.save(payment);
+
+                    try {
+                        var customer = order.getCustomer();
+                        List<String> itemLines = order.getOrderItems().stream()
+                                .map(i -> i.getQuantity() + " × " + i.getProduct().getName())
+                                .toList();
+                        emailService.sendOrderConfirmation(
+                                customer.getEmail(),
+                                customer.getFirstname(),
+                                order.getReference(),
+                                payment.getAmount(),
+                                itemLines);
+                    } catch (Exception e) {
+                        log.warn("Failed to send order confirmation email: {}", e.getMessage());
+                    }
 
                     try {
                         paymentProducer.sendPaymentProcessedEvent(new PaymentEvent(
