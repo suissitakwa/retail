@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.retail_project.auth.revocation.TokenRevocationService;
 import com.retail_project.config.jwt.JwtService;
 import com.retail_project.customer.CustomerRepository;
+import com.retail_project.email.EmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -48,6 +49,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private TokenRevocationService tokenRevocationService;
+
+    @MockitoBean
+    private EmailService emailService;
 
     @Test
     void register_withBlankEmail_returns400() throws Exception {
