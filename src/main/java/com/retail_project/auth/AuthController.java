@@ -6,10 +6,12 @@ import com.retail_project.config.jwt.MyUserDetails;
 import com.retail_project.customer.Customer;
 import com.retail_project.customer.CustomerRepository;
 import com.retail_project.customer.Role;
+import com.retail_project.email.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,6 +37,10 @@ public class AuthController {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final TokenRevocationService tokenRevocationService;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.base-url:http://localhost:3000}")
+    private String frontendBaseUrl;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest request) {
@@ -107,8 +113,8 @@ public class AuthController {
             customer.setResetToken(token);
             customer.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
             customerRepository.save(customer);
-            // TODO: integrate email service to send reset link to customer
-            log.info("Password reset requested for {}", email);
+            String resetLink = frontendBaseUrl + "/reset-password?token=" + token;
+            emailService.sendPasswordReset(email, customer.getFirstname(), resetLink);
         });
         // Always return 200 to avoid user enumeration
         return ResponseEntity.ok().build();
