@@ -1,41 +1,66 @@
 package com.retail_project.email;
 
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${app.mail.from:${spring.mail.username}}")
+    @Value("${MAIL_PASSWORD}")
+    private String resendApiKey;
+
+    @Value("${app.mail.from:NovaMart <onboarding@resend.dev>}")
     private String fromAddress;
 
     @Async
     public void sendPasswordReset(String toEmail, String firstName, String resetLink) {
+        send(toEmail, "Reset your NovaMart password", buildPasswordResetHtml(firstName, resetLink));
+    }
+
+    @Async
+    public void sendOrderConfirmation(String toEmail, String firstName,
+                                      String orderReference, BigDecimal total,
+                                      List<String> itemLines) {
+        send(toEmail, "Your NovaMart order is confirmed!", buildOrderHtml(firstName, orderReference, total, itemLines));
+    }
+
+    private void send(String toEmail, String subject, String html) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(new InternetAddress(fromAddress, "NovaMart"));
-            helper.setTo(toEmail);
-            helper.setSubject("Reset your NovaMart password");
-            helper.setText(buildPasswordResetHtml(firstName, resetLink), true);
-            mailSender.send(message);
-            log.info("Password reset email sent to {}", toEmail);
+            String body = objectMapper.writeValueAsString(Map.of(
+                    "from", fromAddress,
+                    "to", List.of(toEmail),
+                    "subject", subject,
+                    "html", html
+            ));
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 400) {
+                log.warn("Resend API error sending to {}: {} {}", toEmail, response.statusCode(), response.body());
+            } else {
+                log.info("Email sent to {} via Resend (status {})", toEmail, response.statusCode());
+            }
         } catch (Exception e) {
-            log.warn("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
+            log.warn("Failed to send email to {}: {}", toEmail, e.getMessage());
         }
     }
 
@@ -68,33 +93,12 @@ public class EmailService {
                 """.formatted(firstName, resetLink);
     }
 
-    @Async
-    public void sendOrderConfirmation(String toEmail, String firstName,
-                                      String orderReference, BigDecimal total,
-                                      List<String> itemLines) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(new InternetAddress(fromAddress, "NovaMart"));
-            helper.setTo(toEmail);
-            helper.setSubject("Your NovaMart order is confirmed! 🛒");
-            helper.setText(buildHtml(firstName, orderReference, total, itemLines), true);
-
-            mailSender.send(message);
-            log.info("Order confirmation email sent to {}", toEmail);
-        } catch (Exception e) {
-            log.warn("Failed to send order confirmation email to {}: {}", toEmail, e.getMessage());
-        }
-    }
-
-    private String buildHtml(String firstName, String orderReference,
-                              BigDecimal total, List<String> itemLines) {
+    private String buildOrderHtml(String firstName, String orderReference,
+                                   BigDecimal total, List<String> itemLines) {
         StringBuilder items = new StringBuilder();
         for (String line : itemLines) {
             items.append("<li style='padding:4px 0;'>").append(line).append("</li>");
         }
-
         return """
                 <!DOCTYPE html>
                 <html>
