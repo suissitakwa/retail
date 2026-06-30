@@ -1,8 +1,10 @@
 package com.retail_project.email;
 
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -18,11 +20,15 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String fromAddress;
+
     @Async
     public void sendPasswordReset(String toEmail, String firstName, String resetLink) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(new InternetAddress(fromAddress, "NovaMart"));
             helper.setTo(toEmail);
             helper.setSubject("Reset your NovaMart password");
             helper.setText(buildPasswordResetHtml(firstName, resetLink), true);
@@ -70,6 +76,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom(new InternetAddress(fromAddress, "NovaMart"));
             helper.setTo(toEmail);
             helper.setSubject("Your NovaMart order is confirmed! 🛒");
             helper.setText(buildHtml(firstName, orderReference, total, itemLines), true);
