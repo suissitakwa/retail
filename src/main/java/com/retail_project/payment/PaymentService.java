@@ -83,6 +83,10 @@ public class PaymentService {
 
         paymentRepository.findByStripePaymentIntentId(paymentIntentId)
                 .ifPresentOrElse(payment -> {
+                    if (payment.getStatus() == PaymentStatus.PAID) {
+                        log.debug("Payment already PAID for intentId={}, skipping", paymentIntentId);
+                        return;
+                    }
                     log.info("Marking payment as PAID for intentId={}", paymentIntentId);
 
                     payment.setStatus(PaymentStatus.PAID);

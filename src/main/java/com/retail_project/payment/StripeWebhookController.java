@@ -63,11 +63,18 @@ public class StripeWebhookController {
                 System.out.println("➡ checkout.session.completed");
                 System.out.println("   sessionId=" + session.getId());
                 System.out.println("   paymentIntentId=" + session.getPaymentIntent());
+                System.out.println("   paymentStatus=" + session.getPaymentStatus());
 
                 paymentService.attachPaymentIntentToPayment(
                         session.getId(),
                         session.getPaymentIntent()
                 );
+
+                // Handle race: payment_intent.succeeded may arrive before this event.
+                // If the session is already paid, trigger completion now so nothing is missed.
+                if ("paid".equals(session.getPaymentStatus())) {
+                    paymentService.markPaymentAsPaidByIntent(session.getPaymentIntent());
+                }
             }
 
 
