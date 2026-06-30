@@ -63,7 +63,8 @@ management:
   tracing:
     sampling:
       probability: 0.1
-  zipkin:
+  otlp:
     tracing:
-      connect-timeout: 1s
-      read-timeout: 2s
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+      headers:
+        Authorization: "Basic ${GRAFANA_OTLP_TOKEN:disabled}"
