@@ -23,11 +23,14 @@ Production-style e-commerce backend built to demonstrate backend engineering, cl
 | Caching | Redis via Spring Cache (`spring.cache.type=redis`) |
 | Messaging | Apache Kafka — async order + payment event flow |
 | Payments | Stripe (session checkout + webhook-driven confirmation) |
-| Auth | JWT (HS256) — access token 2.4 h, refresh token 7 d |
+| Auth | JWT (HS256) — access token 2.4 h, refresh 7 d + token revocation |
+| Email | Resend HTTP API — transactional emails via HTTPS (Railway-compatible) |
+| Rate limiting | Bucket4j — per-IP token bucket on auth endpoints (5 req / min) |
+| Resilience | Resilience4j circuit breakers on Stripe + OpenAI calls |
 | AI | OpenAI GPT-4o-mini — backend-controlled facts, no direct DB access |
 | Observability | Prometheus metrics via Spring Boot Actuator + Micrometer |
 | Containerisation | Docker (multi-stage build) |
-| CI | GitHub Actions — build, test, Docker image push |
+| CI | GitHub Actions — compile, unit tests, Testcontainers integration tests, Docker push |
 | CD | Jenkins → GKE (`retail-dev` namespace) |
 
 ---
@@ -91,8 +94,24 @@ Stripe webhook: payment_intent.succeeded
 ## Stripe Flow
 
 1. `POST /api/v1/stripe/checkout` → creates Stripe Session, saves `PENDING` Payment row
-2. Webhook `checkout.session.completed` → attaches `paymentIntentId` to Payment row
-3. Webhook `payment_intent.succeeded` → marks Payment `PAID`, Order `COMPLETED`, publishes Kafka event
+2. Webhook `checkout.session.completed` → attaches `paymentIntentId` to Payment row; if `payment_status=paid`, immediately marks PAID (race condition guard)
+3. Webhook `payment_intent.succeeded` → marks Payment `PAID`, Order `COMPLETED`, publishes Kafka event + sends order confirmation email
+
+**Webhook race condition:** Stripe can deliver `payment_intent.succeeded` before `checkout.session.completed`. Both handlers call `markPaymentAsPaidByIntent` — a pessimistic write lock (`SELECT FOR UPDATE`) and an idempotency check (`status == PAID → skip`) prevent double-processing.
+
+---
+
+## Transactional Email
+
+Emails are sent via the [Resend](https://resend.com) HTTP API using Java 17's built-in `HttpClient` — no JavaMail/SMTP dependency. This is required on Railway, which blocks all outbound SMTP ports (587 and 465).
+
+| Trigger | Email |
+|---|---|
+| Registration | Welcome (in app) |
+| Forgot password | Reset link (1 h expiry) |
+| `payment_intent.succeeded` webhook | Order confirmation with item list + total |
+
+`MAIL_PASSWORD` holds the Resend API key. `APP_MAIL_FROM` sets the From address (defaults to `NovaMart <onboarding@resend.dev>`).
 
 ---
 
@@ -198,6 +217,8 @@ git push → GitHub Actions (build.yml)
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` |
 | `JWT_SECRET_KEY` | 32+ char random string |
 | `OPENAI_API_KEY` | `sk-...` |
+| `MAIL_PASSWORD` | Resend API key (`re_...`) |
+| `APP_MAIL_FROM` | `NovaMart <onboarding@resend.dev>` |
 | `APP_CORS_ALLOWED_ORIGINS` | `https://retail-novamart.netlify.app` |
 | `APP_FRONTEND_BASE_URL` | `https://retail-novamart.netlify.app` |
 
