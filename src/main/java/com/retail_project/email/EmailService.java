@@ -1,6 +1,5 @@
 package com.retail_project.email;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,7 @@ public class EmailService {
             helper.setText(buildPasswordResetHtml(firstName, resetLink), true);
             mailSender.send(message);
             log.info("Password reset email sent to {}", toEmail);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.warn("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
         }
     }
@@ -77,7 +76,7 @@ public class EmailService {
 
             mailSender.send(message);
             log.info("Order confirmation email sent to {}", toEmail);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.warn("Failed to send order confirmation email to {}: {}", toEmail, e.getMessage());
         }
     }
