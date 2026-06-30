@@ -60,3 +60,10 @@ management:
       enabled: false
     kafka:
       enabled: false
+  tracing:
+    sampling:
+      probability: 0.1
+  zipkin:
+    tracing:
+      connect-timeout: 1s
+      read-timeout: 2s

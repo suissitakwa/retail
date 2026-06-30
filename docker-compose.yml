@@ -69,6 +69,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_CACHE_TYPE: redis
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
   # ----------------------------------------
   # Database
   # ----------------------------------------
@@ -103,6 +104,15 @@ services:
   # ----------------------------------------
   # Monitoring Services
   # ----------------------------------------
+  # ----------------------------------------
+  # Distributed Tracing
+  # ----------------------------------------
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: prometheus
