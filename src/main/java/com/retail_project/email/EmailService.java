@@ -21,7 +21,7 @@ public class EmailService {
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${MAIL_PASSWORD}")
+    @Value("${MAIL_PASSWORD:disabled}")
     private String resendApiKey;
 
     @Value("${app.mail.from:NovaMart <onboarding@resend.dev>}")
