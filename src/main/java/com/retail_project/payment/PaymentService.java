@@ -81,7 +81,7 @@ public class PaymentService {
     @Transactional
     public void markPaymentAsPaidByIntent(String paymentIntentId) {
 
-        paymentRepository.findByStripePaymentIntentId(paymentIntentId)
+        paymentRepository.findByStripePaymentIntentIdForUpdate(paymentIntentId)
                 .ifPresentOrElse(payment -> {
                     if (payment.getStatus() == PaymentStatus.PAID) {
                         log.debug("Payment already PAID for intentId={}, skipping", paymentIntentId);
