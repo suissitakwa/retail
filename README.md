@@ -91,6 +91,20 @@ Stripe webhook: payment_intent.succeeded
 
 ---
 
+## Distributed Tracing
+
+Every request is traced end-to-end with OpenTelemetry, exported via OTLP to [Grafana Cloud](https://grafana.com) (Tempo). Traces are correlated with logs — every log line carries `traceId` and `spanId` in its MDC context, so a request can be followed from an HTTP entry point through the Spring Security filter chain, service layer, and downstream calls.
+
+![Distributed trace waterfall for POST /auth/login](docs/images/tracing-waterfall.png)
+
+*Example: `POST /auth/login` (82.76ms) — the trace tree shows the Spring Security filter chain (`security filterchain before/after`) wrapping the actual login logic (`secured request`, 79.85ms), which includes BCrypt password verification and JWT generation.*
+
+- **Local dev:** `docker-compose up` starts `grafana/otel-lgtm` — a bundled Grafana + Tempo + Prometheus + Loki stack — reachable at `http://localhost:3000`
+- **Production:** traces export to Grafana Cloud via `OTLP_ENDPOINT` + `GRAFANA_OTLP_TOKEN`
+- Sampling is `management.tracing.sampling.probability` — currently `1.0` (100%) since demo traffic is low; a high-throughput production service would typically dial this to `0.1`–`0.2` to control ingestion cost
+
+---
+
 ## Stripe Flow
 
 1. `POST /api/v1/stripe/checkout` → creates Stripe Session, saves `PENDING` Payment row
