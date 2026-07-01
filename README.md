@@ -28,7 +28,8 @@ Production-style e-commerce backend built to demonstrate backend engineering, cl
 | Rate limiting | Bucket4j — per-IP token bucket on auth endpoints (5 req / min) |
 | Resilience | Resilience4j circuit breakers on Stripe + OpenAI calls |
 | AI | OpenAI GPT-4o-mini — backend-controlled facts, no direct DB access |
-| Observability | Prometheus metrics via Spring Boot Actuator + Micrometer |
+| Observability | Prometheus metrics via Spring Boot Actuator + Micrometer; OpenTelemetry distributed tracing |
+| Load testing | k6 — public/authenticated concurrency scenarios in `loadtest/` |
 | Containerisation | Docker (multi-stage build) |
 | CI | GitHub Actions — compile, unit tests, Testcontainers integration tests, Docker push |
 | CD | Jenkins → GKE (`retail-dev` namespace) |
@@ -192,6 +193,33 @@ FLYWAY_URL=jdbc:postgresql://localhost:5433/retail_db
 | Integration (`*IT.java`) | `@SpringBootTest` + Testcontainers | Full stack against a real PostgreSQL container; Flyway runs real migrations — profile and Failsafe plugin wired, tests pending |
 
 `SecurityAutoConfiguration` is excluded in all `@WebMvcTest` classes. `JwtService` and `CustomerRepository` are mocked in every slice test because `JwtAuthenticationFilter` is a `@Component` Filter picked up by the slice.
+
+---
+
+## Load Testing
+
+`loadtest/checkout-flow.js` ([k6](https://k6.io)) runs two concurrent scenarios against a local instance for 70 seconds:
+- **Public catalog browsing** (50 VUs) — `GET /api/v1/products`, `/api/v1/categories`, `/api/v1/products/{id}` — exercises the Redis-cached read path
+- **Authenticated cart access** (20 VUs) — `GET /api/v1/cart` with a JWT
+
+```bash
+k6 run loadtest/checkout-flow.js
+```
+
+**Results** (local machine, Postgres + Redis in Docker, app run via `mvnw spring-boot:run`):
+
+| Endpoint | Avg | p95 | p99 |
+|---|---|---|---|
+| `GET /api/v1/products` (Redis-cached) | 49ms | 133ms | — |
+| `GET /api/v1/products/{id}` (Redis-cached) | 24ms | 87ms | — |
+| `GET /api/v1/cart` (authenticated, DB) | 3.2s | 6.9s | — |
+| All requests combined | 796ms | 3.81s | 5.83s |
+
+0% request failures (`http_req_failed`), 100% check success across 3,299 requests at ~44 req/s.
+
+**Why the cart numbers look worse than the catalog numbers — and what that does and doesn't mean:** this test intentionally reuses a single JWT across all 20 authenticated VUs, so they all hit *the same customer's cart row* concurrently — a worst-case access pattern no real deployment produces (real traffic spreads across distinct customer rows). Isolated single-request latency for `/api/v1/cart` is ~100–300ms; the multi-second figures above are what 20 concurrent requests to one shared row look like. This was left in deliberately rather than "fixed" by testing 20 separate accounts, because it's a more interesting, honest data point: it shows the cost of contention on a single hot row, not a representative multi-user benchmark.
+
+**A real bug this surfaced:** running this test is what caught a genuine defect in `CacheConfig` — `GenericJackson2JsonRedisSerializer`'s default polymorphic typing cannot deserialize scalar values (like `BigDecimal`) inside Java `record` canonical constructors, so every Redis cache hit on `productById`/`productsList` threw a 500. This had been silently unexercised because `application-prod.yml` defaults `SPRING_CACHE_TYPE` to `none`. Fixed by switching to typed `Jackson2JsonRedisSerializer` per cache instead of relying on default typing.
 
 ---
 
