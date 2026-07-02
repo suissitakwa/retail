@@ -104,6 +104,18 @@ Every request is traced end-to-end with OpenTelemetry, exported via OTLP to [Gra
 - **Production:** traces export to Grafana Cloud via `OTLP_ENDPOINT` + `GRAFANA_OTLP_TOKEN`
 - Sampling is `management.tracing.sampling.probability` — currently `1.0` (100%) since demo traffic is low; a high-throughput production service would typically dial this to `0.1`–`0.2` to control ingestion cost
 
+### AI Debug Copilot
+
+`POST /api/v1/debug-copilot/analyze` (admin-only) turns raw trace data into a plain-English failure/latency explanation. It follows the same "backend owns correctness, LLM owns language" pattern as the customer-facing copilot:
+
+- `TempoClient` queries Tempo's real HTTP API directly (`/api/traces/{id}` for a specific trace, `/api/search` with TraceQL for recent errors/slow requests by service) and parses the actual OTLP-shaped span data — no invented facts
+- The extracted facts (span names, durations, status codes) are handed to GPT-4o-mini, which is instructed to explain only what the data shows and explicitly call out if nothing is abnormal
+- Two modes: pass a `traceId` to analyze one specific request, or a `serviceName` + `lookbackMinutes` to summarize recent errors and the slowest requests across a time window
+- Wrapped in the same `@CircuitBreaker(name = "openai")` used elsewhere — degrades gracefully if OpenAI is unavailable
+
+Example, given a real trace of `POST /auth/login`:
+> *"There are no errors in the spans, as all have STATUS_CODE_OK or STATUS_CODE_UNSET. The span consuming the most time is 'secured request' at 4141ms — likely BCrypt password verification and JWT generation."*
+
 ---
 
 ## Stripe Flow
